@@ -10,6 +10,7 @@ import {
   Settings 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from '../assets/logo-bootins.png';
 
 export function Sidebar() {
   const location = useLocation();
@@ -40,9 +41,9 @@ export function Sidebar() {
         {/* 🚀 LOGO CENTRÉ ICI */}
         <div className="flex justify-center w-full mb-10">
           <img 
-            src="http://127.0.0.1:8000/media/logo_bootins/logo_bootins.png" 
-            alt="BOOTINS" 
-            className="h-10 w-auto" 
+            src={logo} 
+            alt="Bootins Logo" 
+            className="h-8 w-auto" // Ajuste la taille selon ton design
           />
         </div>
         

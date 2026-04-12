@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import logo from '../assets/logo-bootins.png';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -40,9 +41,7 @@ export default function Login() {
       <Card className="w-[400px] shadow-2xl border-none rounded-[2rem] p-4">
         <CardHeader className="space-y-4">
           <CardTitle className="flex justify-center">
-            <img 
-              src="http://127.0.0.1:8000/media/logo_bootins/logo-bootins.png" 
-              alt="BOOTINS" 
+            <img src={logo} alt="Logo Bootins"  
               className="h-12 w-auto block mx-auto" 
             />
           </CardTitle>

@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
+import dj_database_url # type: ignore
 
 # Charge les variables du fichier .env
 load_dotenv()
@@ -94,25 +94,26 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Pour tes tests locaux
     "https://bootins-mvp-1.onrender.com", # Ton site en ligne
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://bootins-mvp-1.onrender.com",
+]
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Utilise SQLite en local, mais PostgreSQL en production
+# 1. On définit la config par défaut (souvent SQLite pour ton PC)
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3', # Optionnel : garde ton ancienne config locale ici
+        default='sqlite:///db.sqlite3',
         conn_max_age=600
     )
 }
 
-# Si tu es sur Render, on force l'utilisation de DATABASE_URL
+# 2. PUIS, on écrase avec la config Render si elle existe (HORS du dictionnaire)
 if os.getenv('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
