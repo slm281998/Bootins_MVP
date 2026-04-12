@@ -39,7 +39,10 @@ export default function CourseBuilder() {
     }
   };
 
-  useEffect(() => { fetchCourseDetails(); }, [id]);
+  useEffect(() => { 
+    fetchCourseDetails(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleAddModule = async (e) => {
     e.preventDefault();
