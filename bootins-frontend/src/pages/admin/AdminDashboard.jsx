@@ -35,8 +35,8 @@ export default function AdminDashboard() {
     setLoading(true); 
     try {
       const [statsRes, coursesRes] = await Promise.all([
-        api.get("admin/stats/"), 
-        api.get("admin/recent-courses/")
+        api.get("api/admin/stats/"), 
+        api.get("api/admin/recent-courses/")
       ]);
       
       setStats(statsRes.data);
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await api.post("courses/", formData, {
+      const response = await api.post("api/courses/", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       const newCourseId = response.data.id;
@@ -156,9 +156,39 @@ export default function AdminDashboard() {
                    </div>
                    
                    <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-400">Image :</Label>
-                     <Input type="file" className="rounded-x2 border-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-primary/10 file:text-primary" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
-                   </div>
+                      <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                        Image de couverture :
+                      </Label>
+                      
+                      <div className="relative group">
+                        {/* On cache l'input réel mais il reste cliquable via le Label */}
+                        <input 
+                          type="file" 
+                          id="image-upload"
+                          className="hidden" 
+                          onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} 
+                        />
+                        
+                        <label 
+                          htmlFor="image-upload"
+                          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 cursor-pointer hover:bg-white hover:border-primary/50 transition-all group"
+                        >
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            {/* L'icône change de couleur au survol */}
+                            <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors mb-2" />
+                            
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
+                              {newCourse.image ? (
+                                <span className="text-primary">{newCourse.image.name}</span>
+                              ) : (
+                                "Choisir une image"
+                              )}
+                            </p>
+                            <p className="text-[8px] text-slate-300 uppercase mt-1">PNG, JPG ou WEBP (Max. 2MB)</p>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
                    
                    <div className="flex gap-3 pt-2">
                      <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 rounded-xl font-bold text-slate-400">Annuler</Button>
