@@ -50,14 +50,14 @@ export default function Login() {
   };
 
   return (
-    /* RESPONSIVE: px-4 et min-h-screen pour s'adapter à tous les téléphones */
+    
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
       {/* RESPONSIVE: w-full max-w-[400px] remplace la largeur fixe */}
       <Card className="w-full max-w-[400px] shadow-2xl border-none rounded-[2rem] p-2 md:p-4">
         <CardHeader className="space-y-4">
           <CardTitle className="flex justify-center">
             <img src={logo} alt="Logo Bootins"  
-              className="h-10 md:h-12 w-auto block mx-auto" 
+              className="h-8 md:h-12 w-auto block mx-auto" 
             />
           </CardTitle>
           <div className="text-center">
