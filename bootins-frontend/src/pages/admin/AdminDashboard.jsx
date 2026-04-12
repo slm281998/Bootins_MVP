@@ -9,7 +9,8 @@ import {
   Plus, 
   Trash2, 
   LayoutDashboard,
-  X
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
