@@ -34,6 +34,9 @@ export default function Dashboard() {
     </div>
   );
 
+  console.log("Nom du profil :", dashboardData.first_name);
+  console.log("Nom du LocalStorage :", JSON.parse(localStorage.getItem("user") || "{}").first_name);
+
   return (
 
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">

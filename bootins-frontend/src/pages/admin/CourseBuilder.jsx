@@ -78,11 +78,11 @@ export default function CourseBuilder() {
   if (loading) return <div className="p-10 text-center font-black animate-pulse text-slate-400 uppercase">Chargement du Builder...</div>;
 
   return (
-    /* RESPONSIVE: flex-col sur mobile */
+   
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
 
-      /* RESPONSIVE: p-4 sur mobile, p-8 sur desktop */
+    
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl flex items-center justify-between animate-in slide-in-from-top duration-300 shadow-sm">

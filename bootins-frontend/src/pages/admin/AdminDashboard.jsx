@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                    
                    <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase text-slate-400">Image :</Label>
-                     <Input type="file" className="rounded-xl border-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-primary/10 file:text-primary" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
+                     <Input type="file" className="rounded-x2 border-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-primary/10 file:text-primary" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
                    </div>
                    
                    <div className="flex gap-3 pt-2">

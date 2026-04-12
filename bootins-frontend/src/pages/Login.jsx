@@ -72,7 +72,7 @@ export default function Login() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="nom@exemple.com" 
+                placeholder="email" 
                 className="rounded-xl border-slate-100 bg-slate-50/50 py-6"
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -89,7 +89,7 @@ export default function Login() {
               </div>
               <Input 
                 id="password" 
-                type="password" 
+                type="password" placeholder="*************" 
                 className="rounded-xl border-slate-100 bg-slate-50/50 py-6"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
