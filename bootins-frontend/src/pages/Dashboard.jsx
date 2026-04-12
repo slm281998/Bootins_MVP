@@ -39,7 +39,6 @@ export default function Dashboard() {
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar />
       
-      /* RESPONSIVE: p-4 sur mobile, p-8 sur desktop */
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <header className="mb-8 md:mb-10">
           {/* RESPONSIVE: text-2xl sur mobile, text-4xl sur desktop */}
@@ -124,7 +123,6 @@ export default function Dashboard() {
             <h2 className="font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-700">Historique des diplômes</h2>
           </div>
 
-          /* RESPONSIVE: Pleine largeur sur mobile */
           <div className="w-full md:max-w-2xl space-y-3 md:space-y-4">
             {dashboardData.certificates?.length > 0 ? (
               dashboardData.certificates.map((cert) => (
