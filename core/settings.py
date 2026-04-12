@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Charge les variables du fichier .env
 load_dotenv()
@@ -96,16 +97,17 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Utilise SQLite en local, mais PostgreSQL en production
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bootins_mvp_db',          # Le nom de votre base de données
-        'USER': 'mon_app_user',        # L'utilisateur créé
-        'PASSWORD': 'SamirLeMze@28', # Votre mot de passe
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3', # Optionnel : garde ton ancienne config locale ici
+        conn_max_age=600
+    )
 }
+
+# Si tu es sur Render, on force l'utilisation de DATABASE_URL
+if os.getenv('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 
 # Password validation
