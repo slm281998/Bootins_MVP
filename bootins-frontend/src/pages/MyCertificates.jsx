@@ -27,7 +27,6 @@ export default function MyCertificates() {
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 overflow-x-hidden">
       <Sidebar />
       
-      /* RESPONSIVE: p-4 sur mobile, p-8 sur desktop */
       <main className="flex-1 w-full p-4 md:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           
