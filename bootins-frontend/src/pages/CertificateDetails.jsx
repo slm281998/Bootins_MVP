@@ -8,8 +8,7 @@ import { Sidebar } from "@/components/Sidebar";
 // 2. BOUTON (Était undefined)
 // Si c'est un composant shadcn, vérifie bien le chemin. 
 // On tente l'import par défaut ET nommé pour être sûr.
-import * as ButtonModule from "@/components/ui/button";
-const Button = ButtonModule.Button || ButtonModule.default;
+import { Button } from "@/components/ui/button";
 
 // 3. LUCIDE ICONS (Étaient des objets)
 import * as Lucide from "lucide-react";
