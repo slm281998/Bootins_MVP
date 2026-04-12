@@ -35,7 +35,7 @@ export default function CourseList() {
   );
 
   return (
-    /* RESPONSIVE: flex-col sur mobile, flex-row sur desktop */
+    
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 overflow-x-hidden">
       <Sidebar />
       

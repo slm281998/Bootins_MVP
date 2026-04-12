@@ -23,7 +23,7 @@ export default function MyCertificates() {
   }, []);
 
   return (
-    /* RESPONSIVE: flex-col sur mobile pour la Sidebar mobile, flex-row sur desktop */
+    
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 overflow-x-hidden">
       <Sidebar />
       
@@ -41,14 +41,14 @@ export default function MyCertificates() {
           </div>
 
           {loading ? (
-            /* Skeleton responsive */
+           
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {[1, 2].map((n) => (
                 <div key={n} className="h-40 md:h-48 bg-white rounded-3xl animate-pulse border border-slate-100" />
               ))}
             </div>
           ) : certificates.length > 0 ? (
-            /* Grille responsive : 1 colonne mobile, 2 colonnes desktop */
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-10">
               {certificates.map((cert) => (
                 <div 
@@ -84,7 +84,7 @@ export default function MyCertificates() {
               ))}
             </div>
           ) : (
-            /* État vide responsive : padding et tailles ajustés */
+           
             <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-10 md:p-20 text-center border-4 border-dashed border-slate-100 flex flex-col items-center">
               <div className="bg-slate-50 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mb-6 text-slate-300">
                 <FileText className="w-8 h-8 md:w-10 md:h-10" />

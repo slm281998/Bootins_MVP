@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("dashboard/student/") 
+    api.get("pai/dashboard/student/") 
       .then(res => {
         setDashboardData(res.data);
         setLoading(false);
@@ -35,7 +35,7 @@ export default function Dashboard() {
   );
 
   return (
-    /* RESPONSIVE: flex-col sur mobile, flex-row sur desktop */
+
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar />
       
@@ -43,7 +43,7 @@ export default function Dashboard() {
         <header className="mb-8 md:mb-10">
           {/* RESPONSIVE: text-2xl sur mobile, text-4xl sur desktop */}
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 italic tracking-tighter">
-            Bonjour, {dashboardData.first_name || "Mze Mbaba"} !
+            Bonjour, {dashboardData.first_name || "Votre nom"} !
           </h1>
           <p className="text-slate-400 font-bold uppercase text-[9px] md:text-[10px] tracking-[0.2em] mt-1">
             Ton espace de formation personnel
