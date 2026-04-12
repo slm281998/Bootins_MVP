@@ -27,7 +27,7 @@ export default function Register() {
     e.preventDefault();
     
     // On crée une promesse pour afficher un message de chargement
-    const promise = api.post("auth/register/", {
+    const promise = api.post("api/auth/register/", {
       first_name: formData.first_name,
       last_name: formData.last_name,
       username: formData.username,

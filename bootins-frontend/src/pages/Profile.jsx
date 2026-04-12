@@ -10,7 +10,7 @@ export default function Profile() {
 
   useEffect(() => {
     // On récupère les données depuis ton API Django
-    api.get("profile/")
+    api.get("api/profile/")
       .then((res) => {
         setUserData(res.data);
         setLoading(false);

@@ -32,7 +32,7 @@ export default function Chatbot() {
 
     try {
       // Appel à ton endpoint backend déjà testé
-      const response = await api.post("chatbot/message/", { message: input });
+      const response = await api.post("api/chatbot/message/", { message: input });
       
       const aiMessage = { 
         role: "assistant", 

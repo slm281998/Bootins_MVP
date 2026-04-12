@@ -20,7 +20,7 @@ export default function Login() {
     const toastId = toast.loading("Connexion à Bootins Academy...");
 
     try {
-      const response = await api.post("auth/login/", { 
+      const response = await api.post("api/auth/login/", { 
           username: email, 
           password: password 
       });
