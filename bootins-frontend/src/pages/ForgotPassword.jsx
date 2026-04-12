@@ -10,13 +10,6 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
-
-
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.post("api/auth/password-reset/", { email });
@@ -27,9 +20,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    /* RESPONSIVE: Ajout de px-4 pour que la carte ne colle pas aux bords sur mobile */
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      {/* RESPONSIVE: w-full pour prendre la place, mais max-w pour ne pas être trop large sur PC */}
       <Card className="w-full max-w-[400px] shadow-xl border-none rounded-[2rem]">
         <CardHeader className="space-y-1 pt-8">
           <CardTitle className="text-2xl font-black text-slate-900 tracking-tighter italic">
@@ -66,39 +57,6 @@ export default function ForgotPassword() {
               >
                 Envoyer le lien
               </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-    e.preventDefault();
-    try {
-      await api.post("api/auth/password-reset/", { email });
-      setMessage("Si cet email existe, un lien de réinitialisation vous a été envoyé.");
-    } catch {
-      setMessage("Une erreur est survenue. Réessayez plus tard.");
-    }
-  };
-
-  return (
-    <div className="flex h-screen items-center justify-center bg-slate-50">
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">Mot de passe oublié ?</CardTitle>
-          <p className="text-sm text-muted-foreground">Entrez votre email pour recevoir un lien.</p>
-        </CardHeader>
-        <CardContent>
-          {message ? (
-            <p className="text-sm font-medium text-green-600 bg-green-50 p-3 rounded">{message}</p>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email professionnel</Label>
-                <Input id="email" type="email" placeholder="nom@exemple.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <Button type="submit" className="w-full">Envoyer le lien</Button>
             </form>
           )}
         </CardContent>
