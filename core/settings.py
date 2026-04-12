@@ -41,7 +41,19 @@ DJOSER = {
 DOMAIN = "localhost:5173"
 SITE_NAME = "Bootins Academy"
 
-ALLOWED_HOSTS = ['ton-app.onrender.com', 'localhost']
+
+
+# On autorise l'URL de Render, localhost et 127.0.0.1
+ALLOWED_HOSTS = [
+    'bootins-mvp-1.onrender.com', 
+    'localhost', 
+    '127.0.0.1'
+]
+
+# Astuce Render : il remplit automatiquement cette variable
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -96,9 +108,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "https://bootins-mvp-1.onrender.com", # Ton site en ligne
 ]
-CSRF_TRUSTED_ORIGINS = [
-    "https://bootins-mvp-1.onrender.com",
-]
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
@@ -171,3 +181,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://bootins-mvp-1.onrender.com",
+    "http://localhost:5173", # Pour tes tests locaux avec Vite
+]

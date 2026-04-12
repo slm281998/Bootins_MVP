@@ -15,6 +15,7 @@ import CourseBuilder from "./pages/admin/CourseBuilder";
 import AdminRoute from "./components/AdminRoute";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import Profile from "./pages/Profile";
+import { Toaster } from 'sonner';
 
 // --- AJOUTE CE BLOC ICI ---
 const ProtectedRoute = ({ children }) => {
@@ -31,7 +32,9 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
+    
     <Router>
+      <Toaster position="top-right" richColors />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -42,7 +45,7 @@ function App() {
         {/* ÉCRAN 4 : Modules & Cadenas (Fiche 8) */}
         <Route path="/courses/:courseId" element={<ProtectedRoute><CourseModules /></ProtectedRoute>} />
         {/* ÉCRAN 5 : Lecture de leçon (Fiche 9) */}
-        <Route path="/certificates" element={<MyCertificates />} />
+        <Route path="/certificates" element={<ProtectedRoute><MyCertificates /></ProtectedRoute>} />
         <Route path="/courses/:courseId/certificate" element={<CertificateDetails />} />
         <Route path="/courses/:courseId/lessons/:lessonId" element={<ProtectedRoute><CoursePlayer />
         </ProtectedRoute>} />
@@ -52,7 +55,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPasswordConfirm />} />
         <Route path="/verify/:token" element={<VerifyCertificate />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
       <Chatbot />
     </Router>

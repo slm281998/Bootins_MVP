@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import logo from '../assets/logo-bootins.png';
+import { toast } from 'sonner';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -24,24 +25,33 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return alert("Les mots de passe ne correspondent pas !");
-    }
+    
+    // On crée une promesse pour afficher un message de chargement
+    const promise = api.post("auth/register/", {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    });
 
-    try {
-      // On envoie TOUTES les données à ton backend Django
-      await api.post("auth/register/", {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
-      });
-      alert("Compte créé avec succès ! Connectez-vous.");
-      navigate("/login");
-    } catch {
-      alert("Erreur lors de l'inscription. Vérifiez vos informations.");
-    }
+    toast.promise(promise, {
+      loading: 'Création de ton compte en cours...',
+      success: () => {
+        navigate("/login");
+        return "Compte créé avec succès ! Bienvenue chez Bootins.";
+      },
+      error: (err) => {
+        // On récupère le message d'erreur précis envoyé par Django
+        const data = err.response?.data;
+        if (data) {
+          if (data.email) return `Email : ${data.email[0]}`;
+          if (data.username) return `Pseudo : ${data.username[0]}`;
+          if (data.password) return `Mot de passe : ${data.password[0]}`;
+        }
+        return "Erreur lors de l'inscription. Vérifie tes informations.";
+      },
+    });
   };
 
   return (

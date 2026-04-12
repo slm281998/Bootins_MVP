@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import logo from '../assets/logo-bootins.png';
+import { toast } from 'sonner';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,26 +15,43 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // On crée un identifiant unique pour cette notification de chargement
+    const toastId = toast.loading("Connexion à Bootins Academy...");
+
     try {
-      // 💡 L'ASTUCE : On envoie la variable 'email' sous le nom 'username'
       const response = await api.post("auth/login/", { 
-        username: email,  // <--- Django attend "username"
-        password: password 
+          username: email, 
+          password: password 
       });
       
-      // Le reste du code ne change pas
+      // Stockage des données
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
+      // Notification de succès
+      toast.success(`Bienvenue, ${response.data.user.first_name || 'étudiant'} !`, { id: toastId });
+
+      // Redirection
       if (response.data.user.is_staff) {
-        navigate("/admin");
+          navigate("/admin");
       } else {
-        navigate("/dashboard");
+          navigate("/dashboard");
       }
-    } catch (err) {
-      console.error("Erreur détaillée :", err.response?.data);
-      alert("Identifiants incorrects ou erreur serveur.");
-    }
+
+      } catch (err) {
+          console.error("Erreur détaillée :", err.response?.data);
+          
+          // Gestion précise du message d'erreur
+          const status = err.response?.status;
+          if (status === 401) {
+              toast.error("Email ou mot de passe incorrect.", { id: toastId });
+          } else if (status === 404) {
+              toast.error("Le serveur est introuvable. Vérifie ton URL Render.", { id: toastId });
+          } else {
+              toast.error("Une erreur serveur est survenue. Réessaie plus tard.", { id: toastId });
+          }
+      }
   };
 
   return (
