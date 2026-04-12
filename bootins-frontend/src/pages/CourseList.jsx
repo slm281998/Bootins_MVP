@@ -44,11 +44,10 @@ export default function CourseList() {
   );
 
   return (
-    /* CORRECTION SIDEBAR: h-screen et overflow-hidden sur le parent */
+    
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar />
       
-      /* CORRECTION SCROLL: Seul le main défile */
       <main className="flex-1 w-full p-4 md:p-8 overflow-y-auto">
         <header className="mb-8 md:mb-10">
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 italic tracking-tighter">
@@ -65,7 +64,7 @@ export default function CourseList() {
               <div className="h-40 md:h-48 overflow-hidden bg-slate-200">
                 {course.image ? (
                   <img 
-                    /* ✅ Utilisation de la fonction getImageUrl */
+                    
                     src={getImageUrl(course.image)} 
                     alt={course.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

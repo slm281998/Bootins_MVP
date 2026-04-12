@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                     <tr><td colSpan="3" className="p-10 text-center animate-pulse text-slate-400 font-bold uppercase text-xs">Chargement des données...</td></tr>
                   ) : recentCourses.length > 0 ? (
                     recentCourses.map((course) => (
-                      <tr key={course.id} onClick={() => navigate(`/admin/courses/${course.id}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                      <tr key={course.id} onClick={() => navigate(`api/admin/courses/${course.id}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
                         <td className="px-6 md:px-8 py-4 md:py-5 font-bold text-sm md:text-base">{course.title}</td>
                         <td className="px-6 md:px-8 py-4 md:py-5 text-center text-sm">{course.enrolled_count || 0}</td>
                         <td className="px-6 md:px-8 py-4 md:py-5 text-right"><Trash2 size={16} className="ml-auto text-slate-300" /></td>
