@@ -47,7 +47,7 @@ export default function CourseBuilder() {
   const handleAddModule = async (e) => {
     e.preventDefault();
     try {
-      await api.post("modules/", { 
+      await api.post("api/modules/", { 
         course: id, 
         title: moduleData.title, 
         order: moduleData.order 

@@ -9,7 +9,7 @@ export default function VerifyCertificate() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    api.get(`certificate/verify/${token}/`)
+    api.get(`api/certificate/verify/${token}/`)
       .then(res => setData(res.data))
       .catch(() => setError(true));
   }, [token]);

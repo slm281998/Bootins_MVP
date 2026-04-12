@@ -66,7 +66,7 @@ export default function AdminDashboard() {
       });
       const newCourseId = response.data.id;
       setIsModalOpen(false);
-      navigate(`/admin/courses/${newCourseId}`);
+      navigate(`api/admin/courses/${newCourseId}`);
     } catch (err) {
       console.error("Erreur détaillée:", err.response?.data);
       alert("Erreur lors de la création.");

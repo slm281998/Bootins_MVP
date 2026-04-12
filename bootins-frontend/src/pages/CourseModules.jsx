@@ -43,7 +43,7 @@ export default function CourseModules() {
   };
 
   useEffect(() => {
-    api.get(`courses/${courseId}/modules/`)
+    api.get(`api/courses/${courseId}/modules/`)
       .then(res => {
         setData(res.data);
         setLoading(false);
