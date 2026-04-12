@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/axios";
 import { Sidebar } from "@/components/Sidebar";
@@ -22,25 +22,21 @@ import { Label } from "@/components/ui/label";
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  // --- 1. VÉRIFIE CETTE LIGNE (Crochets [ ] indispensables) ---
   const [stats, setStats] = useState({ users: 0, courses: 0, certificates: 0 });
   const [recentCourses, setRecentCourses] = useState([]);
-  const [loading, setLoading] = useState(true); // <--- Doit être écrit exactement comme ça
+  const [loading, setLoading] = useState(true); 
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCourse, setNewCourse] = useState({ title: "", description: "", image: null });
 
-  // --- 2. VÉRIFIE LES URLS DANS fetchData ---
   const fetchData = async () => {
-    // Sécurité au cas où setLoading serait mal déclaré
     if (typeof setLoading !== "function") {
-      console.error("setLoading n'est pas défini correctement en haut du fichier");
+      console.error("setLoading n'est pas défini correctement");
       return;
     }
 
     setLoading(true); 
     try {
-      // Ajoute bien les / à la fin des URLs
       const [statsRes, coursesRes] = await Promise.all([
         api.get("admin/stats/"), 
         api.get("admin/recent-courses/")
@@ -57,10 +53,8 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- 3. VÉRIFIE L'URL DE CRÉATION ---
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    
     const formData = new FormData();
     formData.append("title", newCourse.title);
     formData.append("description", newCourse.description);
@@ -69,27 +63,15 @@ export default function AdminDashboard() {
     }
 
     try {
-      // 1. On crée la formation en base de données
-      // IMPORTANT : Vérifie bien que l'URL dans Django finit par un /
       const response = await api.post("courses/", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      
-      // 2. On récupère l'ID que Django vient de créer
       const newCourseId = response.data.id;
-      
-      console.log("Formation créée avec succès, ID :", newCourseId);
-
-      // 3. On ferme la modal
       setIsModalOpen(false);
-      
-      // 4. 🚀 REDIRECTION immédiate vers le builder
-      // Assure-toi que ta route dans App.jsx est bien "/admin/courses/:id"
       navigate(`/admin/courses/${newCourseId}`);
-      
     } catch (err) {
-      console.error("Erreur détaillée lors de la création :", err.response?.data);
-      alert("Erreur serveur (404 ou 400). Vérifie tes URLs Django ou les champs obligatoires.");
+      console.error("Erreur détaillée:", err.response?.data);
+      alert("Erreur serveur (404 ou 400).");
     }
   };
 
@@ -98,76 +80,93 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
+    /* RESPONSIVE: flex-col sur mobile pour laisser la sidebar mobile en haut */
+    <div className="flex flex-col md:flex-row h-screen bg-slate-100 overflow-hidden">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
+      
+      /* RESPONSIVE: p-4 sur mobile, p-8 sur desktop */
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         
-        <div className="flex justify-between items-center mb-10">
+        {/* HEADER : Empilement sur mobile, ligne sur desktop */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 md:mb-10">
           <div>
-            <h1 className="text-3xl font-black italic text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-              <LayoutDashboard size={32} className="text-primary" /> Administration
+            <h1 className="text-xl md:text-3xl font-black italic text-slate-900 uppercase tracking-tighter flex items-center gap-2 md:gap-3">
+              <LayoutDashboard size={24} className="text-primary md:w-8 md:h-8" /> Administration
             </h1>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="gap-2 rounded-xl shadow-lg bg-primary font-bold uppercase text-xs">
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto gap-2 rounded-xl shadow-lg bg-primary font-bold uppercase text-[10px] py-6">
             <Plus size={18} /> Créer une formation
           </Button>
         </div>
 
-        {/* CARTES STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {/* CARTES STATS : 1 colonne mobile, 3 colonnes desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
           <StatCard title="Apprenants" value={stats.users} icon={<Users size={24} />} color="bg-blue-50 text-blue-600" />
           <StatCard title="Cours" value={stats.courses} icon={<BookOpen size={24} />} color="bg-purple-50 text-purple-600" />
           <StatCard title="Certificats" value={stats.certificates} icon={<Award size={24} />} color="bg-yellow-50 text-yellow-600" />
         </div>
 
-        {/* TABLEAU */}
-        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+        {/* TABLEAU RESPONSIVE */}
+        <Card className="border-none shadow-2xl rounded-[1.5rem] md:rounded-[2.5rem] bg-white overflow-hidden">
           <CardContent className="p-0">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50/50 text-[10px] uppercase font-black text-slate-400">
-                <tr>
-                  <th className="px-8 py-4">Titre</th>
-                  <th className="px-8 py-4 text-center">Inscriptions</th>
-                  <th className="px-8 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentCourses.length > 0 ? (
-                  recentCourses.map((course) => (
-                    <tr key={course.id} onClick={() => navigate(`/admin/courses/${course.id}`)} className="hover:bg-slate-50 cursor-pointer">
-                      <td className="px-8 py-5 font-bold">{course.title}</td>
-                      <td className="px-8 py-5 text-center">{course.enrolled_count || 0}</td>
-                      <td className="px-8 py-5 text-right"><Trash2 size={16} className="ml-auto text-slate-300" /></td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="3" className="p-10 text-center italic text-slate-400">Aucune donnée.</td></tr>
-                )}
-              </tbody>
-            </table>
+            {/* Conteneur pour le défilement horizontal sur mobile */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[500px]">
+                <thead className="bg-slate-50/50 text-[10px] uppercase font-black text-slate-400">
+                  <tr>
+                    <th className="px-6 md:px-8 py-4">Titre</th>
+                    <th className="px-6 md:px-8 py-4 text-center">Inscriptions</th>
+                    <th className="px-6 md:px-8 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentCourses.length > 0 ? (
+                    recentCourses.map((course) => (
+                      <tr key={course.id} onClick={() => navigate(`/admin/courses/${course.id}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                        <td className="px-6 md:px-8 py-4 md:py-5 font-bold text-sm md:text-base">{course.title}</td>
+                        <td className="px-6 md:px-8 py-4 md:py-5 text-center text-sm">{course.enrolled_count || 0}</td>
+                        <td className="px-6 md:px-8 py-4 md:py-5 text-right"><Trash2 size={16} className="ml-auto text-slate-300" /></td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="3" className="p-10 text-center italic text-slate-400">Aucune donnée.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
-        {/* MODAL */}
+        {/* MODAL RESPONSIVE */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-lg rounded-[2.5rem] bg-white p-8">
-               <form onSubmit={handleCreateSubmit} className="space-y-6">
-                  <h2 className="text-xl font-black uppercase italic">Ajouter une formation</h2>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Titre :</Label>
-                    <Input required onChange={(e) => setNewCourse({...newCourse, title: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Description :</Label>
-                    <textarea className="w-full p-4 border rounded-2xl bg-slate-50" onChange={(e) => setNewCourse({...newCourse, description: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Image :</Label>
-                    <Input type="file" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
-                  </div>
-                  <Button type="submit" className="w-full rounded-2xl bg-primary font-black uppercase">Créer</Button>
-               </form>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+            <Card className="w-full max-w-lg rounded-[1.5rem] md:rounded-[2.5rem] bg-white p-6 md:p-8 my-auto">
+                <form onSubmit={handleCreateSubmit} className="space-y-4 md:space-y-6">
+                   <div className="flex justify-between items-center">
+                     <h2 className="text-lg md:text-xl font-black uppercase italic text-slate-900">Nouvelle formation</h2>
+                     <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                   </div>
+                   
+                   <div className="space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-slate-400">Titre de la formation :</Label>
+                     <Input required className="rounded-xl border-slate-200" onChange={(e) => setNewCourse({...newCourse, title: e.target.value})} />
+                   </div>
+                   
+                   <div className="space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-slate-400">Description détaillée :</Label>
+                     <textarea rows="4" className="w-full p-4 border border-slate-200 rounded-xl bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" onChange={(e) => setNewCourse({...newCourse, description: e.target.value})} />
+                   </div>
+                   
+                   <div className="space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-slate-400">Image de couverture :</Label>
+                     <Input type="file" className="rounded-xl border-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-primary/10 file:text-primary" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
+                   </div>
+                   
+                   <div className="flex gap-3 pt-2">
+                     <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 rounded-xl font-bold text-slate-400">Annuler</Button>
+                     <Button type="submit" className="flex-1 rounded-xl bg-primary font-black uppercase text-xs shadow-lg shadow-primary/20">Créer le cours</Button>
+                   </div>
+                </form>
             </Card>
           </div>
         )}
@@ -178,9 +177,12 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon, color }) {
   return (
-    <Card className="border-none shadow-sm rounded-[2rem] bg-white p-6 flex items-center gap-5">
-      <div className={`p-4 rounded-2xl ${color}`}>{icon}</div>
-      <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p><p className="text-3xl font-black text-slate-900">{value}</p></div>
+    <Card className="border-none shadow-sm rounded-[1.5rem] md:rounded-[2rem] bg-white p-4 md:p-6 flex items-center gap-4 md:gap-5">
+      <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl shrink-0 ${color}`}>{icon}</div>
+      <div className="min-w-0">
+        <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{title}</p>
+        <p className="text-2xl md:text-3xl font-black text-slate-900 leading-none">{value}</p>
+      </div>
     </Card>
   );
 }

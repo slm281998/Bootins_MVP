@@ -30,7 +30,7 @@ export default function CertificateDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.post("certificate/generate/", { course_id: courseId })
+    api.post("api/certificate/generate/", { course_id: courseId })
       .then((res) => {
         setCertData(res.data);
         setLoading(false);

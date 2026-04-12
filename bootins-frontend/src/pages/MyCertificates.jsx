@@ -12,7 +12,7 @@ export default function MyCertificates() {
 
   useEffect(() => {
     // Appel à l'endpoint qu'on vient de créer dans Django
-    api.get("certificates/me/")
+    api.get("api/certificates/me/")
       .then((res) => {
         setCertificates(res.data);
         setLoading(false);

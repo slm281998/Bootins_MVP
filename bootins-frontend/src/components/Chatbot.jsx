@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Chatbot() {
@@ -14,7 +14,6 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
-  // Scroll automatique vers le bas à chaque nouveau message
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -31,7 +30,6 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      // Appel à ton endpoint backend déjà testé
       const response = await api.post("api/chatbot/message/", { message: input });
       
       const aiMessage = { 
@@ -50,17 +48,25 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    /* RESPONSIVE: Positionnement ajusté (bottom-4 sur mobile, bottom-6 sur desktop) */
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[60] flex flex-col items-end">
+      
       {/* Fenêtre de Chat */}
       {isOpen && (
-        <div className="mb-4 w-80 md:w-96 h-[500px] bg-white rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
+        <div className={cn(
+          "mb-4 flex flex-col bg-white rounded-3xl shadow-2xl border overflow-hidden animate-in slide-in-from-bottom-5",
+          /* RESPONSIVE: Largeur adaptative (100% de la largeur - marges) sur mobile */
+          "w-[calc(100vw-2rem)] sm:w-80 md:w-96",
+          /* RESPONSIVE: Hauteur un peu plus courte sur mobile */
+          "h-[450px] md:h-[500px]"
+        )}>
           {/* Header */}
-          <div className="bg-primary p-4 text-white flex justify-between items-center">
+          <div className="bg-primary p-4 text-white flex justify-between items-center shrink-0">
             <div className="flex items-center gap-2">
               <Bot size={20} />
-              <span className="font-bold">Tuteur IA Bootins</span>
+              <span className="font-bold text-sm md:text-base">Assistance IA Bootins</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded">
+            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded-lg transition-colors">
               <X size={20} />
             </button>
           </div>
@@ -70,29 +76,31 @@ export default function Chatbot() {
             {messages.map((msg, index) => (
               <div key={index} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                 <div className={cn(
-                  "max-w-[80%] p-3 rounded-2xl text-sm shadow-sm",
-                  msg.role === "user" ? "bg-primary text-white rounded-tr-none" : "bg-white text-slate-800 rounded-tl-none border"
+                  "max-w-[85%] p-3 rounded-2xl text-sm shadow-sm",
+                  msg.role === "user" 
+                    ? "bg-primary text-white rounded-tr-none" 
+                    : "bg-white text-slate-800 rounded-tl-none border border-slate-100"
                 )}>
                   {msg.content}
                 </div>
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start italic text-slate-400 text-xs items-center gap-2">
+              <div className="flex justify-start italic text-slate-400 text-[10px] md:text-xs items-center gap-2">
                 <Loader2 size={12} className="animate-spin" /> Le tuteur réfléchit...
               </div>
             )}
           </div>
 
           {/* Input */}
-          <form onSubmit={sendMessage} className="p-4 border-t flex gap-2 bg-white">
+          <form onSubmit={sendMessage} className="p-3 md:p-4 border-t flex gap-2 bg-white shrink-0">
             <Input 
               placeholder="Pose ta question..." 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="flex-1"
+              className="flex-1 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-primary"
             />
-            <Button type="submit" size="icon" disabled={loading}>
+            <Button type="submit" size="icon" disabled={loading} className="rounded-xl shrink-0">
               <Send size={18} />
             </Button>
           </form>
@@ -102,9 +110,13 @@ export default function Chatbot() {
       {/* Bouton Flottant principal */}
       <Button 
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full shadow-lg hover:scale-110 transition-transform"
+        className={cn(
+          "rounded-full shadow-xl hover:scale-110 transition-all active:scale-95",
+          /* RESPONSIVE: Taille légèrement plus petite sur mobile */
+          "h-12 w-12 md:h-14 md:w-14"
+        )}
       >
-        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
+        {isOpen ? <X size={24} md:size={28} /> : <MessageCircle size={24} md:size={28} />}
       </Button>
     </div>
   );

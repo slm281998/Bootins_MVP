@@ -16,7 +16,7 @@ export default function ResetPasswordConfirm() {
     if (password !== confirmPassword) return alert("Les mots de passe ne correspondent pas.");
 
     try {
-      await api.post(`auth/password-reset-confirm/${uid}/${token}/`, { new_password: password });
+      await api.post(`api/auth/password-reset-confirm/${uid}/${token}/`, { new_password: password });
       alert("Mot de passe changé ! Vous allez être redirigé.");
       navigate("/login");
     } catch {

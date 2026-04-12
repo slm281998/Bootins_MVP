@@ -16,7 +16,7 @@ export default function CourseList() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await api.get("formations/");
+      const res = await api.get("api/formations/");
       setCourses(res.data);
     } catch (err) {
       console.error(err);
