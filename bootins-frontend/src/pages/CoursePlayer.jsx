@@ -29,7 +29,7 @@ export default function CoursePlayer() {
 
   const handleCompleteLesson = async (lessonId) => {
     try {
-        const res = await api.post("progress/validate/", { lesson_id: lessonId });
+        const res = await api.post("api/progress/validate/", { lesson_id: lessonId });
         const serverProgress = res.data.progress; 
         
         setActiveLesson(prev => ({ ...prev, is_completed: true }));
@@ -51,7 +51,7 @@ export default function CoursePlayer() {
 
         if (serverProgress === 100) {
             alert("Félicitations ! Vous avez terminé la formation.");
-            navigate("/dashboard"); 
+            navigate("api/dashboard"); 
         }
 
     } catch (err) {
