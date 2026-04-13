@@ -12,7 +12,6 @@ export default function CourseList() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // URL de ton backend Render
   const BACKEND_URL = "https://bootins-mvp.onrender.com";
 
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function CourseList() {
         const res = await api.get("api/formations/");
         setCourses(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("Erreur fetch courses:", err);
       } finally {
         setLoading(false);
       }
@@ -30,11 +29,14 @@ export default function CourseList() {
     fetchCourses();
   }, []);
 
-  // Fonction pour corriger l'URL de l'image
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith("http")) return path; // Si c'est déjà un lien complet (Unsplash)
-    return `${BACKEND_URL}${path}`; // Si c'est un chemin Django (/media/...)
+  // ✅ FONCTION DE NETTOYAGE D'URL (Indispensable en production)
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith("http")) return imagePath;
+    
+    // On s'assure qu'il n'y a pas de double slash //
+    const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+    return `${BACKEND_URL}${cleanPath}`;
   };
 
   if (loading) return (
@@ -44,10 +46,15 @@ export default function CourseList() {
   );
 
   return (
-    
-    <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar />
+    /* ✅ FIX SIDEBAR : h-screen + overflow-hidden sur le parent */
+    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 overflow-hidden font-sans">
       
+      {/* On force la Sidebar à ne pas rétrécir */}
+      <div className="flex-shrink-0">
+        <Sidebar />
+      </div>
+      
+      {/* ✅ FIX SCROLL : Seul le main a le droit de défiler */}
       <main className="flex-1 w-full p-4 md:p-8 overflow-y-auto">
         <header className="mb-8 md:mb-10">
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 italic tracking-tighter">
@@ -64,10 +71,14 @@ export default function CourseList() {
               <div className="h-40 md:h-48 overflow-hidden bg-slate-200">
                 {course.image ? (
                   <img 
-                    
                     src={getImageUrl(course.image)} 
-                    alt={course.title} 
+                    alt={course.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    // ✅ IMAGE DE SECOURS (Si le lien est mort sur Render)
+                    onError={(e) => {
+                      e.target.onerror = null; 
+                      e.target.src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800";
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold uppercase">
