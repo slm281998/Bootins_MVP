@@ -50,6 +50,18 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <Router>
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#0F172A', // Ton gris ardoise
+            color: '#fff',
+            fontWeight: 'bold',
+            borderRadius: '1rem',
+          },
+        }} 
+      />
       <Routes>
         {/* ==========================================
             ROUTES PUBLIQUES 
