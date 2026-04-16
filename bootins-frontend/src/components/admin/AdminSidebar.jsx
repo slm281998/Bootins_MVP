@@ -11,7 +11,7 @@ import {
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logo from '.../assets/logo_bootins.png';
+import logo from "../../assets/logo_bootins.png";
 
 export const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // État pour le menu mobile
