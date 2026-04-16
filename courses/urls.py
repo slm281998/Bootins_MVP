@@ -12,13 +12,13 @@ router.register(r'lessons', LessonViewSet, basename='admin-lessons')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('formations/', CourseListView.as_view(), name='course-list'),
-    path('formations/<int:id>/', CourseDetailView.as_view(), name='course-detail'),
+    path('courses/', CourseListView.as_view(), name='course-list'),
+    path('courses/<int:id>/', CourseDetailView.as_view(), name='course-detail'),
     path('lecons/<int:id>/', LessonDetailView.as_view(), name='lesson-detail'),
     path('progress/validate/', ValidateLessonView.as_view(), name='progress-validate'),
     path('dashboard/student/', views.StudentDashboardView.as_view(), name='student-dashboard'),
     path('chatbot/message/', ChatbotView.as_view(), name='chatbot-message'),
-    path('formations/enroll/', EnrollCourseView.as_view(), name='enroll-course'),
+    path('courses/enroll/', EnrollCourseView.as_view(), name='enroll-course'),
     path('courses/', CourseCreateView.as_view(), name='course-list-create'),
     path('courses/<int:id>/', views.CourseDetailView.as_view(), name='course-detail'),
     path('courses/<int:course_id>/modules/', CourseModulesView.as_view(), name='course-modules'),
