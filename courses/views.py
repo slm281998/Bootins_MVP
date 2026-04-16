@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 import os
-
+from dotenv import load_dotenv
 from groq import Groq
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
@@ -25,6 +25,8 @@ from django.shortcuts import get_object_or_404
 
 User = get_user_model()
 
+
+load_dotenv()
 class CourseListView(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
@@ -50,53 +52,6 @@ class StudentDashboardView(APIView):
             "enrolled_courses": EnrollmentSerializer(all_enrollments, many=True).data,
             "certificates": CertificateSerializer(certs, many=True).data
         })
-
-""" class DashboardView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        
-        # 1. On prépare les données des cours (ton code précédent)
-        courses_query = Course.objects.all() 
-        enrolled_courses_data = []
-        for course in courses_query:
-            enrolled_courses_data = [
-    {
-        "id": 1,
-        "title": "Formation Django Pro (Test)",
-        "progress": 85
-    },
-    {
-        "id": 2,
-        "title": "Interface React avec Tailwind",
-        "progress": 40
-    }
-]
-
-        # --- C'EST CETTE PARTIE QU'IL TE MANQUE POUR ENLEVER LE TRAIT JAUNE ---
-        # 2. On prépare la liste des certificats
-        certificates_data = []
-        
-        # On va chercher les vrais certificats de l'utilisateur en base de données
-        user_certs = Certificate.objects.filter(user=user)
-        
-        for cert in user_certs:
-            certificates_data.append({
-                "id": cert.id,
-                "course_title": cert.course.title,
-                "date": cert.issued_at.strftime("%d/%m/%Y"),
-                "token": str(cert.token)
-            })
-        # -----------------------------------------------------------------------
-
-        # Maintenant, certificates_data EXISTE, donc plus d'erreur !
-        return Response({
-            "username": user.email,
-            "first_name": user.first_name or user.username,
-            "enrolled_courses": enrolled_courses_data,
-            "certificates": certificates_data # <--- Le trait jaune va partir
-        }) """
         
 class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.all()
@@ -379,7 +334,7 @@ class ChatbotView(APIView):
             return Response({"error": "Le message ne peut pas être vide."}, status=status.HTTP_400_BAD_REQUEST)
 
         # On force la clé en dur juste pour le test !
-        api_key = "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"
+        api_key = os.environ.get("GROQ_API_KEY")
 
         try:
             # Initialisation du client Groq
