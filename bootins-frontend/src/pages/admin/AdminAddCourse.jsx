@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'sonner'; // Ajout de l'import
 
 export default function AdminAddCourse() {
   const navigate = useNavigate();
@@ -24,9 +25,14 @@ export default function AdminAddCourse() {
       await api.post("api/courses/", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
+      
+      // Toast de succès
+      toast.success("Formation créée avec succès !");
+      
       navigate("/admin/courses");
     } catch {
-      alert("Erreur lors de la création");
+      // Toast d'erreur
+      toast.error("Erreur lors de la création de la formation.");
     } finally {
       setLoading(false);
     }
@@ -55,11 +61,11 @@ export default function AdminAddCourse() {
         <div className="space-y-2">
           <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Image de couverture</Label>
           <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-2xl bg-white cursor-pointer hover:bg-slate-50 transition-all">
-             <ImageIcon className="text-slate-300 mb-2"/>
-             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-               {newCourse.image ? newCourse.image.name : "Sélectionner une image"}
-             </span>
-             <input type="file" className="hidden" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
+              <ImageIcon className="text-slate-300 mb-2"/>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">
+                {newCourse.image ? newCourse.image.name : "Sélectionner une image"}
+              </span>
+              <input type="file" className="hidden" onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} />
           </label>
         </div>
 

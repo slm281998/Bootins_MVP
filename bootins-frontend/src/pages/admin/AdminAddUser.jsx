@@ -6,14 +6,15 @@ import { Save, ArrowLeft, User, Mail, Lock, ShieldCheck, UserCircle } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner'; // Import de toast
 
 export default function AdminAddUser() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [newUser, setNewUser] = useState({
     username: "",
-    first_name: "", // Ajouté
-    last_name: "",  // Ajouté
+    first_name: "", 
+    last_name: "",  
     email: "",
     password: "",
     is_staff: false
@@ -24,10 +25,16 @@ export default function AdminAddUser() {
     setLoading(true);
     try {
       await api.post("api/users/", newUser);
+      
+      // Notification de succès
+      toast.success("Utilisateur créé avec succès !");
+      
       navigate("/admin/users");
     } catch (err) {
       console.error("Erreur création:", err.response?.data);
-      alert("Erreur lors de la création de l'utilisateur. Vérifiez si l'email ou le pseudo existe déjà.");
+      
+      // Notification d'erreur précise
+      toast.error("Erreur : l'email ou le pseudo existe déjà.");
     } finally {
       setLoading(false);
     }
@@ -44,7 +51,6 @@ export default function AdminAddUser() {
 
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6 bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
         
-        {/* --- NOUVELLE LIGNE : PRÉNOM & NOM --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Prénom</Label>
@@ -73,7 +79,6 @@ export default function AdminAddUser() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Username */}
           <div className="space-y-2">
             <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Nom d'utlisateur</Label>
             <div className="relative">
@@ -87,7 +92,6 @@ export default function AdminAddUser() {
             </div>
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Email</Label>
             <div className="relative">
@@ -103,7 +107,6 @@ export default function AdminAddUser() {
           </div>
         </div>
 
-        {/* Password */}
         <div className="space-y-2">
           <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Mot de passe temporaire</Label>
           <div className="relative">
@@ -117,7 +120,6 @@ export default function AdminAddUser() {
           </div>
         </div>
 
-        {/* Rôle */}
         <div className="space-y-3">
           <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Attribuer un rôle</Label>
           <div className="grid grid-cols-2 gap-4">
@@ -146,7 +148,7 @@ export default function AdminAddUser() {
         <Button 
           type="submit" 
           disabled={loading} 
-          className="w-full py-8 rounded-2xl bg-slate-900 hover:bg-primary font-black uppercase shadow-xl transition-all gap-3"
+          className="w-full py-8 rounded-2xl bg-slate-900 hover:bg-primary font-black uppercase shadow-xl transition-all gap-3 text-[11px]"
         >
           {loading ? "Création..." : <><Save size={20}/> Créer le compte</>}
         </Button>

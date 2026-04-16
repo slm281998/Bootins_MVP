@@ -12,8 +12,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer 
 } from 'recharts';
+import { toast } from 'sonner'; // Ajout de l'import
 
-// Mock data pour le graphique (à remplacer par tes stats Django plus tard)
+// Mock data pour le graphique
 const data = [
   { name: 'Lun', users: 40 },
   { name: 'Mar', users: 30 },
@@ -38,7 +39,11 @@ export default function AdminDashboard() {
       try {
         const res = await api.get("api/admin/stats/");
         setStats(res.data);
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error(err);
+        // Notification d'erreur en cas de problème serveur
+        toast.error("Impossible de charger les statistiques.");
+      }
     };
     fetchStats();
   }, []);
@@ -109,7 +114,10 @@ export default function AdminDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 12, fontWeight: 'bold'}} />
-                <Tooltip />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 12, fontWeight: 'bold'}} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
                 <Area type="monotone" dataKey="users" stroke="#0F172A" strokeWidth={4} fillOpacity={1} fill="url(#colorUsers)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -140,7 +148,7 @@ export default function AdminDashboard() {
             ) : (
               <p className="text-slate-400 text-[10px] font-black uppercase italic">Aucune activité récente</p>
             )}
-            <Button variant="ghost" onClick={() => navigate("/admin/users")} className="w-full mt-4 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-primary">
+            <Button variant="ghost" onClick={() => navigate("/admin/users")} className="w-full mt-4 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors">
               Voir tous les membres
             </Button>
           </div>

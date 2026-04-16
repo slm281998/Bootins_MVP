@@ -6,6 +6,7 @@ import { Save, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner'; // Ajout de l'import
 
 export default function AdminEditModule() {
   const { id } = useParams();
@@ -17,11 +18,13 @@ export default function AdminEditModule() {
   useEffect(() => {
     // Charger le module ET les formations pour le select
     Promise.all([
-      api.get(`api//modules/${id}/`),
-      api.get("api//formations/")
+      api.get(`api/modules/${id}/`),
+      api.get("api/formations/")
     ]).then(([moduleRes, formationsRes]) => {
       setModuleData({ title: moduleRes.data.title, formation: moduleRes.data.formation });
       setFormations(formationsRes.data.results || formationsRes.data);
+    }).catch(() => {
+      toast.error("Erreur lors du chargement des données.");
     });
   }, [id]);
 
@@ -30,8 +33,15 @@ export default function AdminEditModule() {
     setLoading(true);
     try {
       await api.put(`api/modules/${id}/`, moduleData);
+      
+      // Notification de succès
+      toast.success("Module mis à jour avec succès !");
+      
       navigate("/admin/modules");
-    } catch { alert("Erreur"); }
+    } catch { 
+      // Notification d'erreur
+      toast.error("Erreur lors de la modification du module."); 
+    }
     finally { setLoading(false); }
   };
 
@@ -39,13 +49,18 @@ export default function AdminEditModule() {
     <AdminLayout>
       <div className="mb-8 flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate("/admin/modules")} className="rounded-full h-12 w-12"><ArrowLeft/></Button>
-        <h1 className="text-3xl font-black italic uppercase tracking-tighter">Modifier Module</h1>
+        <h1 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Modifier Module</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-xl space-y-6 bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
         <div className="space-y-2">
           <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Titre du module</Label>
-          <Input value={moduleData.title} required className="rounded-xl py-6" onChange={(e) => setModuleData({...moduleData, title: e.target.value})} />
+          <Input 
+            value={moduleData.title} 
+            required 
+            className="rounded-xl py-6 bg-slate-50 border-none font-bold" 
+            onChange={(e) => setModuleData({...moduleData, title: e.target.value})} 
+          />
         </div>
 
         <div className="space-y-2">
@@ -53,15 +68,19 @@ export default function AdminEditModule() {
           <select 
             value={moduleData.formation}
             required
-            className="w-full p-4 border rounded-xl bg-slate-50 text-sm font-bold"
+            className="w-full p-4 border-none rounded-xl bg-slate-50 text-sm font-bold h-[52px] outline-none focus:ring-2 focus:ring-primary/20"
             onChange={(e) => setModuleData({...moduleData, formation: e.target.value})}
           >
             {formations.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
           </select>
         </div>
 
-        <Button type="submit" disabled={loading} className="w-full py-8 rounded-2xl bg-slate-900 hover:bg-primary font-black uppercase transition-all">
-          Enregistrer les modifications
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          className="w-full py-8 rounded-2xl bg-slate-900 hover:bg-primary font-black uppercase transition-all shadow-xl"
+        >
+          {loading ? "Enregistrement..." : "Enregistrer les modifications"}
         </Button>
       </form>
     </AdminLayout>

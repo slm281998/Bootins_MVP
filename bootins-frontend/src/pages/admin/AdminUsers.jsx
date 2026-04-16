@@ -14,6 +14,7 @@ import {
 } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from 'sonner';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -24,10 +25,11 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       const res = await api.get("api/users/");
-      // Si ton Django utilise la pagination, on prend res.data.results
       setUsers(res.data.results || res.data);
     } catch (err) {
       console.error("Erreur chargement utilisateurs:", err);
+      // Notification d'erreur au chargement
+      toast.error("Impossible de charger les utilisateurs.");
     } finally {
       setLoading(false);
     }
@@ -38,8 +40,11 @@ export default function AdminUsers() {
       try {
         await api.delete(`api/users/${id}/`);
         setUsers(users.filter(u => u.id !== id));
+        // Notification de succès
+        toast.success("Utilisateur supprimé avec succès !");
       } catch {
-        alert("Erreur lors de la suppression");
+        // Notification d'erreur à la suppression
+        toast.error("Erreur lors de la suppression de l'utilisateur.");
       }
     }
   };

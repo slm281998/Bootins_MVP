@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from 'sonner';
 
 // --- PAGES ÉTUDIANT & COMMUN ---
 import Login from "./pages/Login";
@@ -53,15 +53,8 @@ function App() {
     <Router>
       <Toaster 
         position="top-center" 
-        toastOptions={{
-          duration: 2000,
-          style: {
-            background: '#0F172A', // Ton gris ardoise
-            color: '#fff',
-            fontWeight: 'bold',
-            borderRadius: '1rem',
-          },
-        }} 
+        richColors  // 👈 Indispensable pour avoir les couleurs vert/rouge
+        closeButton // Ajoute une petite croix pour fermer
       />
       <Routes>
         {/* ==========================================

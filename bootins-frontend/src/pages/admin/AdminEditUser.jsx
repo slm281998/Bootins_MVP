@@ -6,6 +6,7 @@ import { Save, ArrowLeft, User, Mail, Lock, ShieldCheck, UserCircle } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner'; // Ajout de l'import
 
 export default function AdminEditUser() {
   const { id } = useParams();
@@ -18,7 +19,7 @@ export default function AdminEditUser() {
     last_name: "",
     email: "",
     is_staff: false,
-    password: "" // Optionnel lors de l'édition
+    password: "" 
   });
 
   // Charger les données de l'utilisateur au montage
@@ -30,7 +31,8 @@ export default function AdminEditUser() {
         setUserData({ ...res.data, password: "" });
       } catch (err) {
         console.error("Erreur chargement:", err);
-        alert("Impossible de charger les données de l'utilisateur.");
+        // Toast d'erreur pour le chargement
+        toast.error("Impossible de charger les données de l'utilisateur.");
       } finally {
         setFetching(false);
       }
@@ -49,10 +51,15 @@ export default function AdminEditUser() {
       }
 
       await api.put(`api/users/${id}/`, dataToSend);
+      
+      // Toast de succès
+      toast.success("Profil mis à jour avec succès !");
+      
       navigate("/admin/users");
     } catch (err) {
       console.error("Erreur modification:", err.response?.data);
-      alert("Erreur lors de la mise à jour de l'utilisateur.");
+      // Toast d'erreur pour la mise à jour
+      toast.error("Erreur lors de la mise à jour de l'utilisateur.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +107,7 @@ export default function AdminEditUser() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Pseudo (Username) - Souvent grisé car c'est l'identifiant principal */}
+          {/* Pseudo (Username) */}
           <div className="space-y-2">
             <Label className="uppercase text-[10px] font-black text-slate-400 tracking-widest">Nom d'utlisateur (Non modifiable)</Label>
             <div className="relative">
