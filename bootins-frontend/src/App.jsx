@@ -54,7 +54,7 @@ function App() {
       <Toaster 
         position="top-center" 
         toastOptions={{
-          duration: 3000,
+          duration: 2000,
           style: {
             background: '#0F172A', // Ton gris ardoise
             color: '#fff',
