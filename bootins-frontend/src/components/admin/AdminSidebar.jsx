@@ -11,6 +11,7 @@ import {
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo_bootins.png";
 
 export const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // État pour le menu mobile
@@ -37,9 +38,9 @@ export const AdminSidebar = () => {
       {/* 📱 BOUTON MENU MOBILE (Visible uniquement sur mobile) */}
       <div className="md:hidden flex items-center justify-between bg-[#1f273b] p-4 w-full border-b border-slate-800">
         <img 
-          src="http://127.0.0.1:8000/media/logo_bootins/logo_bootins.png" 
-          alt="LOGO" 
-          className="h-8 w-auto" 
+          src={logo} 
+          alt="Bootins Logo" 
+          className="h-8 w-auto"
         />
         <Button 
           variant="ghost" 
