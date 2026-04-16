@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
+import { Toaster } from "react-hot-toast";
 
 // --- PAGES ÉTUDIANT & COMMUN ---
 import Login from "./pages/Login";
