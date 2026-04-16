@@ -61,9 +61,9 @@ export const AdminSidebar = () => {
           {/* LOGO CENTRÉ */}
           <div className="hidden md:flex justify-center w-full mb-10">
             <img 
-              src="http://127.0.0.1:8000/media/logo_bootins/logo_bootins.png" 
-              alt="BOOTINS" 
-              className="h-10 w-auto" 
+              src={logo} 
+              alt="Bootins Logo" 
+              className="h-8 w-auto"
             />
           </div>
           
@@ -104,7 +104,7 @@ export const AdminSidebar = () => {
               className="w-full justify-start gap-3 text-slate-400 hover:text-red-200 hover:bg-red-900 rounded-2xl transition-colors"
             >
               <LogOut size={20} />
-              <span className="text-sm font-bold uppercase tracking-widest">Déconnexion</span>
+              <span className="text-sm font-bold uppercase tracking-widest">Se Déconnecté</span>
             </Button>
           </div>
         </div>
