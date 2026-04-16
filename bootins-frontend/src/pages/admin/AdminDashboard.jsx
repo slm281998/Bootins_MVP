@@ -1,217 +1,170 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/axios";
-import { Sidebar } from "@/components/Sidebar";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { 
-  Users, 
-  BookOpen, 
-  Award, 
-  Plus, 
-  Trash2, 
-  LayoutDashboard,
-  X,
-  Image as ImageIcon
+  Users, BookOpen, Award, LayoutDashboard, 
+  TrendingUp, Plus, ChevronRight, Bell, Calendar 
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer 
+} from 'recharts';
+
+// Mock data pour le graphique (à remplacer par tes stats Django plus tard)
+const data = [
+  { name: 'Lun', users: 40 },
+  { name: 'Mar', users: 30 },
+  { name: 'Mer', users: 65 },
+  { name: 'Jeu', users: 45 },
+  { name: 'Ven', users: 90 },
+  { name: 'Sam', users: 70 },
+  { name: 'Dim', users: 110 },
+];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-
-  // On récupère le nom depuis le localStorage pour l'accueil
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-  const [stats, setStats] = useState({ users: 0, courses: 0, certificates: 0 });
-  const [recentCourses, setRecentCourses] = useState([]);
-  
-  // ✅ CORRECTION : Ajout de la variable 'loading'
-  const [loading, setLoading] = useState(true); 
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCourse, setNewCourse] = useState({ title: "", description: "", image: null });
-
-  const fetchData = async () => {
-    setLoading(true); 
-    try {
-      const [statsRes, coursesRes] = await Promise.all([
-        api.get("api/admin/stats/"), 
-        api.get("api/admin/recent-courses/")
-      ]);
-      
-      setStats(statsRes.data);
-      const coursesData = coursesRes.data.results || coursesRes.data;
-      setRecentCourses(Array.isArray(coursesData) ? coursesData : []);
-      
-    } catch (err) {
-      console.error("Erreur de récupération:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", newCourse.title);
-    formData.append("description", newCourse.description);
-    if (newCourse.image) {
-      formData.append("image", newCourse.image);
-    }
-
-    try {
-      const response = await api.post("api/courses/", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      const newCourseId = response.data.id;
-      setIsModalOpen(false);
-      navigate(`api/admin/courses/${newCourseId}`);
-    } catch (err) {
-      console.error("Erreur détaillée:", err.response?.data);
-      alert("Erreur lors de la création.");
-    }
-  };
+  const [stats, setStats] = useState({ 
+    users: 0, 
+    courses: 0, 
+    certificates: 0,
+    recentUsers: [] 
+  });
 
   useEffect(() => {
-    fetchData();
+    const fetchStats = async () => {
+      try {
+        const res = await api.get("api/admin/stats/");
+        setStats(res.data);
+      } catch (err) { console.error(err); }
+    };
+    fetchStats();
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-slate-100 overflow-hidden">
-      <Sidebar />
-      
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 md:mb-10">
-          <div>
-            <h1 className="text-xl md:text-3xl font-black italic text-slate-900 uppercase tracking-tighter flex items-center gap-2 md:gap-3">
-              <LayoutDashboard size={24} className="text-primary md:w-8 md:h-8" /> 
-              Bonjour, {storedUser.first_name || "Admin"}
-            </h1>
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Espace d'administration Bootins</p>
-          </div>
-          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto gap-2 rounded-xl shadow-lg bg-primary font-bold uppercase text-[10px] py-6">
-            <Plus size={18} /> Créer une formation
+    <AdminLayout>
+      {/* --- HEADER AVEC ACTIONS --- */}
+      <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-3">
+            <LayoutDashboard size={40} className="text-primary" /> 
+            Panneau de Contrôle
+          </h1>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">
+            Bienvenue, Samir • {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={() => navigate("/admin/courses/add")} className="rounded-2xl bg-slate-900 font-black uppercase text-[10px] py-6 px-6 shadow-xl hover:bg-primary transition-all gap-2">
+            <Plus size={16} /> Nouvelle Formation
           </Button>
         </div>
+      </header>
 
-        {/* CARTES STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
-          <StatCard title="Apprenants" value={stats.users} icon={<Users size={24} />} color="bg-blue-50 text-blue-600" />
-          <StatCard title="Cours" value={stats.courses} icon={<BookOpen size={24} />} color="bg-purple-50 text-purple-600" />
-          <StatCard title="Certificats" value={stats.certificates} icon={<Award size={24} />} color="bg-yellow-50 text-yellow-600" />
-        </div>
+      {/* --- GRILLE DE STATS ÉVOLUÉE --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <StatCard 
+          title="Apprenants" 
+          value={stats.users} 
+          trend="+12%" 
+          icon={<Users />} 
+          color="bg-blue-500" 
+        />
+        <StatCard 
+          title="Formations" 
+          value={stats.courses} 
+          trend="+2 ce mois" 
+          icon={<BookOpen />} 
+          color="bg-emerald-500" 
+        />
+        <StatCard 
+          title="Certificats" 
+          value={stats.certificates} 
+          trend="85% réussite" 
+          icon={<Award />} 
+          color="bg-amber-500" 
+        />
+      </div>
 
-        {/* TABLEAU */}
-        <Card className="border-none shadow-2xl rounded-[1.5rem] md:rounded-[2.5rem] bg-white overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[500px]">
-                <thead className="bg-slate-50/50 text-[10px] uppercase font-black text-slate-400">
-                  <tr>
-                    <th className="px-6 md:px-8 py-4">Titre</th>
-                    <th className="px-6 md:px-8 py-4 text-center">Inscriptions</th>
-                    <th className="px-6 md:px-8 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loading ? (
-                    <tr><td colSpan="3" className="p-10 text-center animate-pulse text-slate-400 font-bold uppercase text-xs">Chargement des données...</td></tr>
-                  ) : recentCourses.length > 0 ? (
-                    recentCourses.map((course) => (
-                      <tr key={course.id} onClick={() => navigate(`api/admin/courses/${course.id}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
-                        <td className="px-6 md:px-8 py-4 md:py-5 font-bold text-sm md:text-base">{course.title}</td>
-                        <td className="px-6 md:px-8 py-4 md:py-5 text-center text-sm">{course.enrolled_count || 0}</td>
-                        <td className="px-6 md:px-8 py-4 md:py-5 text-right"><Trash2 size={16} className="ml-auto text-slate-300" /></td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="3" className="p-10 text-center italic text-slate-400">Aucune formation trouvée.</td></tr>
-                  )}
-                </tbody>
-              </table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* --- GRAPHIQUE DE CROISSANCE --- */}
+        <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white p-8">
+          <CardHeader className="p-0 mb-8 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Activité des Inscriptions</CardTitle>
+              <p className="text-slate-400 text-[10px] font-bold uppercase">7 derniers jours</p>
             </div>
-          </CardContent>
+            <TrendingUp className="text-emerald-500" />
+          </CardHeader>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data}>
+                <defs>
+                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0F172A" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#0F172A" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 12, fontWeight: 'bold'}} />
+                <Tooltip />
+                <Area type="monotone" dataKey="users" stroke="#0F172A" strokeWidth={4} fillOpacity={1} fill="url(#colorUsers)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
 
-        {/* MODAL */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-            <Card className="w-full max-w-lg rounded-[1.5rem] md:rounded-[2.5rem] bg-white p-6 md:p-8 my-auto">
-                <form onSubmit={handleCreateSubmit} className="space-y-4 md:space-y-6">
-                   <div className="flex justify-between items-center">
-                     <h2 className="text-lg md:text-xl font-black uppercase italic text-slate-900">Nouvelle formation</h2>
-                     <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                   </div>
-                   
-                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-400">Titre de la formation :</Label>
-                     <Input required className="rounded-xl border-slate-200" onChange={(e) => setNewCourse({...newCourse, title: e.target.value})} />
-                   </div>
-                   
-                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-400">Description :</Label>
-                     <textarea rows="4" className="w-full p-4 border border-slate-200 rounded-xl bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" onChange={(e) => setNewCourse({...newCourse, description: e.target.value})} />
-                   </div>
-                   
-                   <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
-                        Image de couverture :
-                      </Label>
-                      
-                      <div className="relative group">
-                        {/* On cache l'input réel mais il reste cliquable via le Label */}
-                        <input 
-                          type="file" 
-                          id="image-upload"
-                          className="hidden" 
-                          onChange={(e) => setNewCourse({...newCourse, image: e.target.files[0]})} 
-                        />
-                        
-                        <label 
-                          htmlFor="image-upload"
-                          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 cursor-pointer hover:bg-white hover:border-primary/50 transition-all group"
-                        >
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            {/* L'icône change de couleur au survol */}
-                            <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors mb-2" />
-                            
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
-                              {newCourse.image ? (
-                                <span className="text-primary">{newCourse.image.name}</span>
-                              ) : (
-                                "Choisir une image"
-                              )}
-                            </p>
-                            <p className="text-[8px] text-slate-300 uppercase mt-1">PNG, JPG ou WEBP (Max. 2MB)</p>
-                          </div>
-                        </label>
-                      </div>
+        {/* --- DERNIERS INSCRITS --- */}
+        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8">
+          <CardHeader className="p-0 mb-6">
+            <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Nouveaux Membres</CardTitle>
+          </CardHeader>
+          <div className="space-y-6">
+            {stats.recentUsers?.length > 0 ? (
+              stats.recentUsers.map((user, i) => (
+                <div key={i} className="flex items-center justify-between group cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500 text-xs">
+                      {user.username.substring(0, 2).toUpperCase()}
                     </div>
-                   
-                   <div className="flex gap-3 pt-2">
-                     <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 rounded-xl font-bold text-slate-400">Annuler</Button>
-                     <Button type="submit" className="flex-1 rounded-xl bg-primary font-black uppercase text-xs shadow-lg shadow-primary/20">Créer</Button>
-                   </div>
-                </form>
-            </Card>
+                    <div>
+                      <p className="text-sm font-black text-slate-800 uppercase tracking-tighter">{user.username}</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">{user.email}</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-200 group-hover:text-primary transition-colors" />
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-400 text-[10px] font-black uppercase italic">Aucune activité récente</p>
+            )}
+            <Button variant="ghost" onClick={() => navigate("/admin/users")} className="w-full mt-4 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-primary">
+              Voir tous les membres
+            </Button>
           </div>
-        )}
-      </main>
-    </div>
+        </Card>
+      </div>
+    </AdminLayout>
   );
 }
 
-function StatCard({ title, value, icon, color }) {
+function StatCard({ title, value, icon, color, trend }) {
   return (
-    <Card className="border-none shadow-sm rounded-[1.5rem] md:rounded-[2rem] bg-white p-4 md:p-6 flex items-center gap-4 md:gap-5">
-      <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl shrink-0 ${color}`}>{icon}</div>
-      <div className="min-w-0">
-        <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{title}</p>
-        <p className="text-2xl md:text-3xl font-black text-slate-900 leading-none">{value}</p>
-      </div>
+    <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-2 relative overflow-hidden group">
+      <CardContent className="p-6 flex items-center gap-6">
+        <div className={`h-16 w-16 rounded-2xl ${color} text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500`}>
+          {React.cloneElement(icon, { size: 28 })}
+        </div>
+        <div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-black text-slate-900 tracking-tighter">{value}</span>
+            <span className="text-[9px] font-black text-emerald-500 uppercase">{trend}</span>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

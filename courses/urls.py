@@ -1,9 +1,17 @@
 from django.urls import path
 from .views import CourseListView, CourseCreateView, CourseDetailView, LessonDetailView, ValidateLessonView, ChatbotView, GenerateCertificateView, VerifyCertificateView, EnrollCourseView, RequestPasswordResetView, ResetPasswordConfirmView, CourseModulesView, my_certificates
 from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import CourseViewSet, ModuleViewSet, LessonViewSet
 
+router = DefaultRouter()
+router.register(r'formations', CourseViewSet, basename='admin-courses')
+router.register(r'modules', ModuleViewSet, basename='admin-modules')
+router.register(r'lessons', LessonViewSet, basename='admin-lessons')
 
 urlpatterns = [
+    path('', include(router.urls)),
     path('formations/', CourseListView.as_view(), name='course-list'),
     path('formations/<int:id>/', CourseDetailView.as_view(), name='course-detail'),
     path('lecons/<int:id>/', LessonDetailView.as_view(), name='lesson-detail'),

@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CourseAdminSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, UserProfileSerializer
+from .serializers import CourseAdminSerializer, UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, UserProfileSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
@@ -13,6 +13,30 @@ from courses.models import Course, Enrollment, Certificate
 from rest_framework import generics, permissions
 
 User = get_user_model()
+
+from rest_framework import viewsets, permissions
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class UserAdminViewSet(viewsets.ModelViewSet):
+    """
+    Gestion complète des utilisateurs pour l'administration.
+    Accessible uniquement par les administrateurs (is_staff).
+    """
+    queryset = User.objects.all().order_by('-id') # Les plus récents en premier
+    serializer_class = UserSerializer
+    
+    # 🛡️ SÉCURITÉ : Seuls les admins peuvent accéder à ces routes
+    permission_classes = [permissions.IsAdminUser]
+
+    # Optionnel : Si tu veux pouvoir chercher par email ou pseudo
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(email__icontains=search) | queryset.filter(username__icontains=search)
+        return queryset
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -101,3 +125,27 @@ def update_profile(request):
     user.last_name = request.data.get('last_name', user.last_name)
     user.save()
     return Response({"message": "Profil mis à jour !"})
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_stats(request):
+    """
+    Vue pour le Dashboard Admin : 
+    Regroupe les données des deux applications (users et courses).
+    """
+    try:
+        data = {
+            # Stats globales
+            'users': User.objects.count(),
+            'courses': Course.objects.count(),
+            'certificates': Certificate.objects.count(),
+            
+            # Liste pour la sidebar "Nouveaux Membres" du dashboard React
+            'recentUsers': User.objects.all().order_by('-id')[:5].values(
+                'id', 'username', 'email', 'first_name', 'last_name'
+            )
+        }
+        return Response(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

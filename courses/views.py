@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Course, Enrollment, Lesson, LessonProgress , Enrollment, Certificate, Module  # <-- Ajout de Lesson
-from .serializers import CourseSerializer, DashboardCourseSerializer, CourseDetailSerializer, LessonSerializer, ModuleSerializer# <-- Nouveaux serializers
+from .serializers import CourseSerializer, CourseSerializer, ModuleSerializer, LessonSerializer, EnrollmentSerializer, CertificateSerializer, DashboardCourseSerializer, CourseDetailSerializer, LessonSerializer, ModuleSerializer# <-- Nouveaux serializers
 from io import BytesIO
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas 
@@ -22,7 +22,6 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from .serializers import EnrollmentSerializer, CertificateSerializer
 
 User = get_user_model()
 
@@ -380,7 +379,7 @@ class ChatbotView(APIView):
             return Response({"error": "Le message ne peut pas être vide."}, status=status.HTTP_400_BAD_REQUEST)
 
         # On force la clé en dur juste pour le test !
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = "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"
 
         try:
             # Initialisation du client Groq
@@ -435,7 +434,6 @@ def my_certificates(request):
     
     return Response(data)
 
-from .serializers import CourseSerializer
 
 class CourseCreateView(generics.ListCreateAPIView):
     queryset = Course.objects.all()
@@ -506,3 +504,25 @@ def validate_lesson(request):
         "progress": enrollment.progress,
         "is_completed": enrollment.is_completed
     })
+    
+
+from rest_framework import viewsets, permissions
+
+# ✅ ViewSet pour les Formations (Courses)
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    # Seuls les admins peuvent modifier, les autres peuvent juste voir (ou selon tes besoins)
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly] 
+
+# ✅ ViewSet pour les Modules
+class ModuleViewSet(viewsets.ModelViewSet):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+# ✅ ViewSet pour les Leçons
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [permissions.IsAdminUser]

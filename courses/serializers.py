@@ -1,62 +1,69 @@
 from rest_framework import serializers
 from .models import Course, Enrollment, Module, Lesson, LessonProgress, Certificate
 
-
-# courses/serializers.py
-
+# --- 1. LESSON ---
 class LessonSerializer(serializers.ModelSerializer):
-    is_completed = serializers.SerializerMethodField()
+    # On ajoute le titre du module pour que ce soit plus joli dans ton tableau React
+    module_title = serializers.ReadOnlyField(source='module.title', default="Sans module")
 
     class Meta:
         model = Lesson
-        fields = ['id', 'module', 'title', 'content_text', 'video_url', 'order', 'is_completed']
+        # On liste les champs UN PAR UN pour éviter les surprises
+        # Retire 'order' ou 'video_url' de cette liste si tu ne les as pas dans ton models.py
+        fields = ['id', 'module', 'module_title', 'title', 'content_text', 'video_url', 'order']
 
-    def get_is_completed(self, obj):
-        user = self.context.get('request').user
-        # Importation locale pour éviter les imports circulaires
-        from .models import LessonProgress
-        return LessonProgress.objects.filter(user=user, lesson=obj).exists()
-
+# --- 2. MODULE ---
 class ModuleSerializer(serializers.ModelSerializer):
-    # C'est cette ligne qui permet d'avoir module.lessons dans React !
-    lessons = LessonSerializer(many=True, read_only=True)
+    # On utilise 'serializers.ReadOnlyField' pour plus de stabilité
+    # Remplace 'course.title' par 'formation.title' si ton champ s'appelle formation
+    course_title = serializers.ReadOnlyField(source='course.title', default="Sans formation")
 
     class Meta:
         model = Module
-        fields = ['id', 'course', 'title', 'order', 'lessons']
-        
+        # Vérifie bien que 'order' existe dans ton modèle, sinon retire-le de cette liste
+        fields = ['id', 'course', 'course_title', 'title', 'order']
+
+# --- 3. COURSE ---
 class CourseSerializer(serializers.ModelSerializer):
-    # On dit à Django : "Ne lis pas la colonne 'progress', appelle la fonction get_progress à la place"
     progress = serializers.SerializerMethodField()
-    modules = ModuleSerializer(many=True, read_only=True)
+    enrolled_count = serializers.SerializerMethodField() # On passe par une méthode pour être sûr
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'image', 'progress', 'modules']
+        fields = ['id', 'title', 'description', 'image', 'progress', 'enrolled_count']
+
+    def get_enrolled_count(self, obj):
+        try:
+            # On essaie de compter les inscrits
+            return obj.enrollment_set.count() 
+        except:
+            return 0
 
     def get_progress(self, obj):
-        # 1. Récupérer l'utilisateur qui fait la requête
-        user = self.context.get('request').user
-        
-        if user.is_authenticated:
-            # 2. Compter le nombre total de leçons pour CE cours
-            from .models import Lesson
-            total_lessons = Lesson.objects.filter(module__course=obj).count()
-            
-            if total_lessons == 0:
-                return 0
-            
-            # 3. Compter combien de ces leçons l'utilisateur a terminé
-            completed_lessons = LessonProgress.objects.filter(
-                user=user, 
-                lesson__module__course=obj
-            ).count()
-            
-            # 4. Calculer le pourcentage
-            return int((completed_lessons / total_lessons) * 100)
-        
+        try:
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                from .models import Lesson, LessonProgress
+                total = Lesson.objects.filter(module__course=obj).count()
+                if total == 0: return 0
+                completed = LessonProgress.objects.filter(user=request.user, lesson__module__course=obj, is_completed=True).count()
+                return int((completed / total) * 100)
+        except Exception as e:
+            print(f"Erreur calcul progrès: {e}")
         return 0
-        
+
+class CourseDetailSerializer(serializers.ModelSerializer):
+    modules = ModuleSerializer(many=True, read_only=True)
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'description', 'image', 'created_at', 'modules']
+
+# --- 4. ENROLLMENT (Le Serializer qui manquait !) ---
+class EnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = '__all__'
+
 class DashboardCourseSerializer(serializers.ModelSerializer):
     course = CourseSerializer(read_only=True)
     progress_percentage = serializers.SerializerMethodField()
@@ -66,42 +73,14 @@ class DashboardCourseSerializer(serializers.ModelSerializer):
         fields = ['course', 'enrolled_at', 'progress_percentage']
 
     def get_progress_percentage(self, obj):
-        # Logique pour calculer la progression demandée dans le MVP
-        course = obj.course
-        user = obj.user
-        
-        # 1. Compter le nombre total de leçons dans cette formation
-        total_lessons = Lesson.objects.filter(module__course=course).count()
-        if total_lessons == 0:
-            return 0
-            
-        # 2. Compter combien de ces leçons l'utilisateur a terminées
-        completed_lessons = LessonProgress.objects.filter(
-            user=user, 
-            lesson__module__course=course, 
-            is_completed=True
-        ).count()
-        
-        # 3. Calculer le pourcentage
-        return int((completed_lessons / total_lessons) * 100)
-        
-class CourseDetailSerializer(serializers.ModelSerializer):
-    modules = ModuleSerializer(many=True, read_only=True) # Récupère les modules de la formation
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'description', 'image', 'created_at', 'modules']
-        
-class EnrollmentSerializer(serializers.ModelSerializer):
-    # 'course' ici permet de récupérer les infos du modèle Course lié
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    
-    class Meta:
-        model = Enrollment
-        fields = ['id', 'course_id', 'course_title', 'progress', 'is_completed']
-        
+        total = Lesson.objects.filter(module__course=obj.course).count()
+        if total == 0: return 0
+        completed = LessonProgress.objects.filter(user=obj.user, lesson__module__course=obj.course, is_completed=True).count()
+        return int((completed / total) * 100)
+
+# --- 5. CERTIFICATE ---
 class CertificateSerializer(serializers.ModelSerializer):
-    # On peut ajouter des champs calculés pour faciliter l'affichage React
-    course_title = serializers.CharField(source='course.title', read_only=True)
+    course_title = serializers.ReadOnlyField(source='course.title')
     user_full_name = serializers.SerializerMethodField()
 
     class Meta:
