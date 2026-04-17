@@ -55,7 +55,7 @@ class StudentDashboardView(APIView):
         
 class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+    serializer_class = CourseDetailSerializer
     lookup_field = 'id'
 
     def get_serializer_context(self):

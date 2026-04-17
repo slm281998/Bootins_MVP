@@ -16,7 +16,7 @@ export default function CoursePlayer() {
   const [showLessons, setShowLessons] = useState(false); // Pour basculer la liste sur mobile
 
   useEffect(() => {
-    api.get(`api/formations/${courseId}/`)
+    api.get(`api/courses/${courseId}/`)
       .then(res => {
         setCourse(res.data);
         if (res.data.modules?.[0]?.lessons?.[0]) {
