@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import React from "react";
-import { Toaster } from 'sonner';
+
 
 // --- PAGES ÉTUDIANT & COMMUN ---
 import Login from "./pages/Login";
@@ -20,26 +20,24 @@ import Profile from "./pages/Profile";
 // --- COMPOSANTS DE SÉCURITÉ ---
 import AdminRoute from "./components/AdminRoute";
 
-// --- IMPORTS DES PAGES ADMIN (LISTES) ---
+// --- IMPORTS DES PAGES ADMIN ---
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminModules from "./pages/admin/AdminModules";
 import AdminLessons from "./pages/admin/AdminLessons";
-
-// --- IMPORTS DES PAGES ADMIN (AJOUT) ---
 import AdminAddCourse from "./pages/admin/AdminAddCourse";
 import AdminAddModule from "./pages/admin/AdminAddModule";
 import AdminAddLesson from "./pages/admin/AdminAddLesson";
-
-// --- IMPORTS DES PAGES ADMIN (ÉDITION) ---
 import AdminEditCourse from "./pages/admin/AdminEditCourse";
 import AdminEditModule from "./pages/admin/AdminEditModule";
 import AdminEditLesson from "./pages/admin/AdminEditLesson";
 import AdminEditUser from "./pages/admin/AdminEditUser";
 import AdminAddUser from "./pages/admin/AdminAddUser";
 
-// --- COMPOSANT PROTECTED ROUTE (Utilisateurs connectés) ---
+import { Toaster } from 'sonner';
+
+// --- COMPOSANT PROTECTED ROUTE ---
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("access_token");
   if (!token) {
@@ -48,14 +46,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+// --- COMPOSANT DE CONTENU RÉACTIF ---
+function AppContent() {
+  // eslint-disable-next-line no-unused-vars
+  const location = useLocation();
+  const isAuthenticated = !!localStorage.getItem("access_token");
+
   return (
-    <Router>
-      <Toaster 
-        position="top-center" 
-        richColors  // 👈 Indispensable pour avoir les couleurs vert/rouge
-        closeButton // Ajoute une petite croix pour fermer
-      />
+    <>
       <Routes>
         {/* ==========================================
             ROUTES PUBLIQUES 
@@ -81,31 +79,36 @@ function App() {
         {/* ==========================================
             ROUTES ADMINISTRATION (ADMIN ONLY) 
         ========================================== */}
-        {/* Accueil & Dashboard Admin */}
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-
-        {/* --- Gestion des Formations --- */}
         <Route path="/admin/courses" element={<AdminRoute><AdminCourses /></AdminRoute>} />
         <Route path="/admin/courses/add" element={<AdminRoute><AdminAddCourse /></AdminRoute>} />
         <Route path="/admin/courses/edit/:id" element={<AdminRoute><AdminEditCourse /></AdminRoute>} />
-
-        {/* --- Gestion des Utilisateurs --- */}
         <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/users/add" element={<AdminRoute><AdminAddUser /></AdminRoute>} />
         <Route path="/admin/users/edit/:id" element={<AdminRoute><AdminEditUser /></AdminRoute>} />
-
-        {/* --- Gestion des Modules --- */}
         <Route path="/admin/modules" element={<AdminRoute><AdminModules /></AdminRoute>} />
         <Route path="/admin/modules/add" element={<AdminRoute><AdminAddModule /></AdminRoute>} />
         <Route path="/admin/modules/edit/:id" element={<AdminRoute><AdminEditModule /></AdminRoute>} />
-
-        {/* --- Gestion des Leçons --- */}
         <Route path="/admin/lessons" element={<AdminRoute><AdminLessons /></AdminRoute>} />
         <Route path="/admin/lessons/add" element={<AdminRoute><AdminAddLesson /></AdminRoute>} />
         <Route path="/admin/lessons/edit/:id" element={<AdminRoute><AdminEditLesson /></AdminRoute>} />
-
       </Routes>
-      <Chatbot />
+
+      <Toaster 
+        position="top-center" 
+        richColors 
+        closeButton 
+      />
+      {isAuthenticated && <Chatbot />}
+    </>
+  );
+}
+
+// --- COMPOSANT PRINCIPAL ---
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
