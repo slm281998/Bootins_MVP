@@ -1,4 +1,3 @@
-from rest_framework import generics, status
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -22,6 +21,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from time import timezone
+from rest_framework import generics, status, viewsets, permissions
 
 User = get_user_model()
 
@@ -42,15 +43,16 @@ class StudentDashboardView(APIView):
 
     def get(self, request):
         user = request.user
-        # 🚀 On récupère TOUTES les inscriptions (sans filtrer sur is_completed)
+        # On récupère tout
         all_enrollments = Enrollment.objects.filter(user=user)
         
-        certs = Certificate.objects.filter(user=user)
+        # ⚠️ On utilise le serializer avec progress_percentage !
+        serializer = EnrollmentSerializer(all_enrollments, many=True)
         
         return Response({
             "first_name": user.first_name or user.username,
-            "enrolled_courses": EnrollmentSerializer(all_enrollments, many=True).data,
-            "certificates": CertificateSerializer(certs, many=True).data
+            "enrolled_courses": serializer.data,
+            "certificates": CertificateSerializer(Certificate.objects.filter(user=user), many=True).data
         })
         
 class CourseDetailView(generics.RetrieveAPIView):
@@ -94,7 +96,6 @@ class ValidateLessonView(APIView):
             return Response({"error": "Leçon introuvable"}, status=status.HTTP_404_NOT_FOUND)
 
 class EnrollCourseView(APIView):
-    """ Permet à un apprenant de s'inscrire à une formation """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -102,23 +103,20 @@ class EnrollCourseView(APIView):
         try:
             course = Course.objects.get(id=course_id)
             enrollment, created = Enrollment.objects.get_or_create(user=request.user, course=course)
+            
             if created:
                 return Response({"message": "Inscription réussie !"}, status=status.HTTP_201_CREATED)
-            return Response({"message": "Vous êtes déjà inscrit à ce cours."}, status=status.HTTP_200_OK)
+            return Response({"message": "Déjà inscrit."}, status=status.HTTP_200_OK)
+            
         except Course.DoesNotExist:
-            return Response({"error": "Formation introuvable"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Cours introuvable"}, status=status.HTTP_404_NOT_FOUND)
         
 class CourseModulesView(APIView):
     def get(self, request, course_id):
         try:
             course = get_object_or_404(Course, id=course_id)
             modules = course.modules.all().order_by('order')
-            
-            # --- CALCUL DE LA PROGRESSION GLOBALE DU COURS ---
-            # 1. Nombre total de leçons dans toute la formation
             total_course_lessons = Lesson.objects.filter(module__course=course).count()
-            
-            # 2. Nombre de leçons terminées par l'utilisateur pour ce cours
             total_completed_course_lessons = LessonProgress.objects.filter(
                 user=request.user, 
                 lesson__module__course=course, 
@@ -287,7 +285,7 @@ class RequestPasswordResetView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
             # URL que l'utilisateur devra cliquer sur votre Frontend (React/Vue)
-            reset_url = f"http://localhost:3000/reset-password/{uid}/{token}/"
+            reset_url = f"http://localhost:5173/reset-password/{uid}/{token}/"
             
             # "Envoi" de l'email (apparaîtra dans votre terminal)
             send_mail(
@@ -360,7 +358,6 @@ class ChatbotView(APIView):
                 temperature=0.7 # Un peu de créativité, mais pas trop
             )
 
-            # Récupération de la réponse
             bot_reply = chat_completion.choices[0].message.content
 
             return Response({
@@ -368,7 +365,6 @@ class ChatbotView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            # En cas de problème réseau ou d'API
             return Response({"error": f"Erreur de connexion à l'IA : {str(e)}"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
 @api_view(['GET']) # type: ignore
@@ -402,81 +398,59 @@ class LessonCreateView(generics.CreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Lesson, Enrollment, LessonProgress, Certificate
-import uuid
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def validate_lesson(request):
     user = request.user
     lesson_id = request.data.get('lesson_id')
     lesson = get_object_or_404(Lesson, id=lesson_id)
-    
-    # 1. Enregistrer que l'élève a fini CETTE leçon
-    progress_record, created = LessonProgress.objects.get_or_create(
+    course = lesson.module.course
+
+    enrollment, created_enroll = Enrollment.objects.get_or_create(
         user=user, 
-        lesson=lesson,
-        defaults={'is_completed': True}
+        course=course
     )
-    if not created:
-        progress_record.is_completed = True
+
+    progress_record, created_prog = LessonProgress.objects.get_or_create(
+        user=user, 
+        lesson=lesson
+    )
+    
+    if not progress_record.completed_at:
+        progress_record.completed_at = timezone.now()
         progress_record.save()
 
-    # 2. Récupérer l'inscription globale au cours
-    course = lesson.module.course
-    enrollment = get_object_or_404(Enrollment, user=user, course=course)
-
-    # 3. Calculer le nouveau pourcentage
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_lessons = LessonProgress.objects.filter(
         user=user, 
         lesson__module__course=course, 
-        is_completed=True
+        completed_at__isnull=False
     ).count()
-
-    # Formule : (Leçons terminées / Total) * 100
-    new_progress = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
-
-    # 4. Mise à jour de la table Enrollment
-    enrollment.progress = new_progress
-    if new_progress >= 100:
-        enrollment.is_completed = True
-        # Optionnel : Créer le certificat automatiquement s'il n'existe pas
-        Certificate.objects.get_or_create(
-            user=user, 
-            course=course, 
-            defaults={'token': uuid.uuid4().hex[:10].upper()}
-        )
     
-    enrollment.save() # 🚀 SAUVEGARDE RÉELLE DANS POSTGRESQL
+    new_pct = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+
+    enrollment.progress = new_pct
+    if new_pct >= 100:
+        enrollment.is_completed = True
+    enrollment.save()
 
     return Response({
         "status": "success",
-        "progress": enrollment.progress,
+        "progress": new_pct,
         "is_completed": enrollment.is_completed
     })
     
 
-from rest_framework import viewsets, permissions
-
-# ✅ ViewSet pour les Formations (Courses)
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    # Seuls les admins peuvent modifier, les autres peuvent juste voir (ou selon tes besoins)
     permission_classes = [permissions.IsAuthenticatedOrReadOnly] 
 
-# ✅ ViewSet pour les Modules
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [permissions.IsAdminUser]
 
-# ✅ ViewSet pour les Leçons
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer

@@ -1,32 +1,41 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Course, Enrollment, Module, Lesson, LessonProgress, Certificate
 
-# --- 1. LESSON ---
+# --- 1. LESSON & MODULE ---
+# serializers.py
+
 class LessonSerializer(serializers.ModelSerializer):
-    # On ajoute le titre du module pour que ce soit plus joli dans ton tableau React
-    module_title = serializers.ReadOnlyField(source='module.title', default="Sans module")
+    # ✅ On ajoute un champ calculé pour savoir si CET utilisateur a fini CETTE leçon
+    is_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
-        # On liste les champs UN PAR UN pour éviter les surprises
-        # Retire 'order' ou 'video_url' de cette liste si tu ne les as pas dans ton models.py
-        fields = ['id', 'module', 'module_title', 'title', 'content_text', 'video_url', 'order']
+        fields = ['id', 'title', 'content_text', 'video_url', 'order', 'is_completed']
 
-# --- 2. MODULE ---
+    def get_is_completed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # On vérifie dans la table de progression
+            return LessonProgress.objects.filter(
+                user=request.user, 
+                lesson=obj, 
+                completed_at__isnull=False
+            ).exists()
+        return False
+
 class ModuleSerializer(serializers.ModelSerializer):
-    # On utilise 'serializers.ReadOnlyField' pour plus de stabilité
-    # Remplace 'course.title' par 'formation.title' si ton champ s'appelle formation
-    course_title = serializers.ReadOnlyField(source='course.title', default="Sans formation")
-
+    # Cette ligne permet d'imbriquer les leçons dans les modules
+    lessons = LessonSerializer(many=True, read_only=True) 
     class Meta:
         model = Module
-        # Vérifie bien que 'order' existe dans ton modèle, sinon retire-le de cette liste
-        fields = ['id', 'course', 'course_title', 'title', 'order']
+        fields = ['id', 'title', 'lessons', 'order']
 
-# --- 3. COURSE ---
+
+# --- 2. COURSE ---
 class CourseSerializer(serializers.ModelSerializer):
     progress = serializers.SerializerMethodField()
-    enrolled_count = serializers.SerializerMethodField() # On passe par une méthode pour être sûr
+    enrolled_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -34,51 +43,100 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_enrolled_count(self, obj):
         try:
-            # On essaie de compter les inscrits
             return obj.enrollment_set.count() 
         except:
             return 0
 
     def get_progress(self, obj):
+        """Calcul de progression pour la liste des cours"""
         try:
             request = self.context.get('request')
             if request and request.user.is_authenticated:
-                from .models import Lesson, LessonProgress
                 total = Lesson.objects.filter(module__course=obj).count()
                 if total == 0: return 0
-                completed = LessonProgress.objects.filter(user=request.user, lesson__module__course=obj, is_completed=True).count()
+                completed = LessonProgress.objects.filter(
+                    user=request.user, 
+                    lesson__module__course=obj, 
+                    completed_at__isnull=False 
+                ).count()
                 return int((completed / total) * 100)
         except Exception as e:
-            print(f"Erreur calcul progrès: {e}")
+            print(f"Erreur calcul progrès Course: {e}")
         return 0
+
+# serializers.py
 
 class CourseDetailSerializer(serializers.ModelSerializer):
     modules = ModuleSerializer(many=True, read_only=True)
+    progress = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'image', 'created_at', 'modules']
+        fields = ['id', 'title', 'description', 'modules', 'progress']
 
-# --- 4. ENROLLMENT (Le Serializer qui manquait !) ---
+    def get_progress(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            total = Lesson.objects.filter(module__course=obj).count()
+            if total == 0: return 0
+            completed = LessonProgress.objects.filter(
+                user=request.user, 
+                lesson__module__course=obj, 
+                completed_at__isnull=False 
+            ).count()
+            return int((completed / total) * 100)
+        return 0
+
+
+# --- 3. PROGRESSION & ENROLLMENT (CORRIGÉ) ---
+
+class LessonProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LessonProgress
+        fields = ['id', 'lesson', 'completed_at']
+
 class EnrollmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer principal pour le Dashboard de l'apprenant.
+    C'est lui qui envoie les données à la section 'Formations en cours'.
+    """
+    course_title = serializers.ReadOnlyField(source='course.title')
+    course_id = serializers.ReadOnlyField(source='course.id')
+    # ✅ Correction : On utilise "progress" pour correspondre au frontend React
+    progress = serializers.SerializerMethodField()
+
     class Meta:
         model = Enrollment
-        fields = '__all__'
+        fields = ['id', 'course_id', 'course_title', 'progress', 'is_completed', 'enrolled_at']
 
-class DashboardCourseSerializer(serializers.ModelSerializer):
-    course = CourseSerializer(read_only=True)
-    progress_percentage = serializers.SerializerMethodField()
+    def get_progress(self, obj):
+        """Calcul du pourcentage exact basé sur les leçons terminées"""
+        try:
+            # 1. Nombre total de leçons dans ce cours
+            total_lessons = Lesson.objects.filter(module__course=obj.course).count()
+            if total_lessons == 0:
+                return 0
+            
+            # 2. Nombre de leçons avec une date de fin pour cet utilisateur
+            completed_lessons = LessonProgress.objects.filter(
+                user=obj.user, 
+                lesson__module__course=obj.course, 
+                completed_at__isnull=False
+            ).count()
+            
+            return int((completed_lessons / total_lessons) * 100)
+        except Exception as e:
+            print(f"Erreur calcul progrès Enrollment: {e}")
+            return 0
 
-    class Meta:
-        model = Enrollment
-        fields = ['course', 'enrolled_at', 'progress_percentage']
 
-    def get_progress_percentage(self, obj):
-        total = Lesson.objects.filter(module__course=obj.course).count()
-        if total == 0: return 0
-        completed = LessonProgress.objects.filter(user=obj.user, lesson__module__course=obj.course, is_completed=True).count()
-        return int((completed / total) * 100)
+# --- 4. DASHBOARD & CERTIFICATE ---
 
-# --- 5. CERTIFICATE ---
+class DashboardCourseSerializer(EnrollmentSerializer):
+    """Utilise la même logique que EnrollmentSerializer pour éviter les bugs"""
+    class Meta(EnrollmentSerializer.Meta):
+        pass
+
 class CertificateSerializer(serializers.ModelSerializer):
     course_title = serializers.ReadOnlyField(source='course.title')
     user_full_name = serializers.SerializerMethodField()
