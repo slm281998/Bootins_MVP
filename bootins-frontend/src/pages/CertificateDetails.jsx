@@ -71,7 +71,7 @@ export default function CertificateDetails() {
     );
   }
 
-  const verificationUrl = `${window.location.origin}/api/verify/${certData?.token}`;
+  const verificationUrl = `${window.location.origin}/verify/${certData?.token}`;
 
   return (
     // 📱 Responsive : flex-col sur mobile, flex-row sur desktop
