@@ -18,7 +18,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("dashboard/student/") 
+    api.get("api/dashboard/student/") 
       .then(res => {
         console.log("Données reçues du Backend :", res.data); // Pour le débug
         setDashboardData(res.data);

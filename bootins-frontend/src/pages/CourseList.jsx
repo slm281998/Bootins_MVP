@@ -16,7 +16,7 @@ export default function CourseList() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await api.get("formations/");
+      const res = await api.get("api/formations/");
       setCourses(res.data);
     } catch (err) {
       console.error(err);
@@ -32,7 +32,7 @@ export default function CourseList() {
 
   const handleEnroll = async (courseId) => {
     try {
-      await api.post("enroll/", { course_id: courseId });
+      await api.post("api/enroll/", { course_id: courseId });
       toast.success("Inscription réussie !");
       fetchCourses();
     } catch {

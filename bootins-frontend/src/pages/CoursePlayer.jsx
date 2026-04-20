@@ -19,7 +19,7 @@ export default function CoursePlayer() {
 
   // 1. Chargement des données du cours
   useEffect(() => {
-    api.get(`formations/${courseId}/`)
+    api.get(`api/formations/${courseId}/`)
       .then(res => {
         const courseData = res.data;
         setCourse(courseData);
@@ -51,7 +51,7 @@ export default function CoursePlayer() {
   // 2. Validation d'une leçon et mise à jour de la progression
   const handleCompleteLesson = async (currentLessonId) => {
     try {
-      const res = await api.post("progress/validate/", { lesson_id: currentLessonId });
+      const res = await api.post("api/progress/validate/", { lesson_id: currentLessonId });
       const serverProgress = res.data.progress; 
 
       setActiveLesson(prev => ({ ...prev, is_completed: true }));
