@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
-
-// 1. SIDEBAR (OK d'après tes logs)
 import { Sidebar } from "@/components/Sidebar";
-
-// 2. BOUTON (Était undefined)
-// Si c'est un composant shadcn, vérifie bien le chemin. 
-// On tente l'import par défaut ET nommé pour être sûr.
 import { Button } from "@/components/ui/button";
 
-// 3. LUCIDE ICONS (Étaient des objets)
+// Imports Lucide (on garde ta méthode spécifique)
 import * as Lucide from "lucide-react";
 const Award = Lucide.Award;
 const Download = Lucide.Download;
@@ -18,8 +12,9 @@ const ChevronLeft = Lucide.ChevronLeft;
 const Calendar = Lucide.Calendar;
 const User = Lucide.User;
 const Book = Lucide.Book;
+const Loader2 = Lucide.Loader2;
 
-// 4. QRCODE (Était un objet)
+// QRCODE
 import QRCodeModule from "react-qr-code";
 const QRCode = QRCodeModule.default || QRCodeModule;
 
@@ -28,9 +23,11 @@ export default function CertificateDetails() {
   const navigate = useNavigate();
   const [certData, setCertData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    api.post("api/certificate/generate/", { course_id: courseId })
+    // ✅ Correction URL : on enlève 'api/' car ton axios le gère déjà
+    api.post("certificate/generate/", { course_id: courseId })
       .then((res) => {
         setCertData(res.data);
         setLoading(false);
@@ -43,7 +40,9 @@ export default function CertificateDetails() {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await api.post('certificate/generate/?download=true', 
+      setDownloading(true);
+      // ✅ Correction URL : on enlève 'api/' pour éviter le 404
+      const response = await api.post('api/certificate/generate/?download=true', 
           { course_id: courseId }, 
           { responseType: 'blob' }
       );
@@ -56,87 +55,104 @@ export default function CertificateDetails() {
       link.remove();
     } catch (error) {
       console.error("Erreur téléchargement:", error);
+    } finally {
+      setDownloading(false);
     }
   };
 
-  // Tant que l'API n'a pas répondu, on affiche cet écran simple
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-500 font-bold">GÉNÉRATION DU CERTIFICAT...</p>
+          <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto mb-4" />
+          <p className="text-slate-500 font-black text-xs tracking-widest uppercase">Génération du certificat...</p>
         </div>
       </div>
     );
   }
 
-  const verificationUrl = `${window.location.origin}/verify/${certData?.token}`;
-  
+  const verificationUrl = `${window.location.origin}/api/verify/${certData?.token}`;
 
   return (
-    <div className="flex h-screen bg-slate-50">
-      {/* 3. VERIFICATION : Si Sidebar est tjs en erreur, commente la ligne suivante pour tester */}
+    // 📱 Responsive : flex-col sur mobile, flex-row sur desktop
+    <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden font-sans">
+      
+      {/* Sidebar cachée sur mobile si nécessaire ou adaptée */}
       <Sidebar />
       
-      <main className="flex-1 p-8 overflow-y-auto">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 gap-2 hover:bg-white">
-          <ChevronLeft size={18} /> Retour aux modules
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        {/* Bouton retour adapté au mobile */}
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 md:mb-6 gap-2 hover:bg-white rounded-xl text-slate-800 font-bold">
+          <ChevronLeft size={18} /> <span className="text-xs uppercase tracking-widest">Retour</span>
         </Button>
 
-        <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] shadow-2xl border-4 border-white overflow-hidden">
-          <div className="bg-primary p-12 text-white text-center relative">
-            <Award size={64} className="mx-auto mb-4 text-yellow-400" />
-            <h1 className="text-3xl font-black italic tracking-tight">CERTIFICAT DE RÉUSSITE</h1>
-            <p className="opacity-70 uppercase tracking-widest text-xs mt-2">Bootins Academy</p>
+        {/* Carte du Certificat - Largeur responsive */}
+        <div className="max-w-2xl mx-auto bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden mb-10">
+          
+          {/* Header du certificat */}
+          <div className="bg-slate-900 p-8 md:p-12 text-white text-center relative">
+            <Award size={48} className="mx-auto mb-4 text-yellow-400 md:w-16 md:h-16" />
+            <h1 className="text-2xl md:text-3xl font-black italic tracking-tighter leading-none uppercase">
+              Certificat de réussite
+            </h1>
+            <p className="opacity-50 uppercase tracking-[0.3em] text-[10px] mt-4 font-bold">Bootins Academy</p>
           </div>
 
-          <div className="p-10 space-y-8">
-            <div className="space-y-6">
+          <div className="p-6 md:p-12 space-y-6 md:space-y-10">
+            {/* Infos Apprenant */}
+            <div className="grid grid-cols-1 gap-6 md:gap-8">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-100 rounded-2xl"><User className="text-slate-400" size={24} /></div>
+                <div className="p-3 bg-slate-50 rounded-2xl"><User className="text-slate-300" size={24} /></div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-300 uppercase">Apprenant</p>
-                  <p className="text-xl font-bold text-slate-800">{certData?.user_full_name || "Étudiant"}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Apprenant</p>
+                  <p className="text-lg md:text-2xl font-black text-slate-800 italic uppercase">{certData?.user_full_name || "Étudiant"}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-100 rounded-2xl"><Book className="text-slate-400" size={24} /></div>
+                <div className="p-3 bg-slate-50 rounded-2xl"><Book className="text-slate-300" size={24} /></div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-300 uppercase">Formation</p>
-                  <p className="text-xl font-bold text-slate-800">{certData?.course_title || "Chargement..."}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Formation complétée</p>
+                  <p className="text-lg md:text-2xl font-black text-slate-800 italic uppercase leading-tight line-clamp-2">
+                    {certData?.course_title || "Chargement..."}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-100 rounded-2xl"><Calendar className="text-slate-400" size={24} /></div>
+                <div className="p-3 bg-slate-50 rounded-2xl"><Calendar className="text-slate-300" size={24} /></div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-300 uppercase">Obtenu le</p>
-                  <p className="text-xl font-bold text-slate-800">
-                    {certData?.issued_at ? new Date(certData.issued_at).toLocaleDateString('fr-FR') : "..."}
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Date d'obtention</p>
+                  <p className="text-lg md:text-2xl font-black text-slate-800 italic uppercase">
+                    {certData?.issued_at ? new Date(certData.issued_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : "..."}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Section QR Code */}
-            <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-[2rem] border-4 border-dashed border-slate-200">
+            {/* Section QR Code Responsive */}
+            <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
               {certData?.token && (
-                <div className="bg-white p-3 rounded-2xl shadow-sm">
-                  <QRCode value={verificationUrl} size={140} />
+                <div className="bg-white p-4 rounded-3xl shadow-sm">
+                  <QRCode value={verificationUrl} size={120} />
                 </div>
               )}
-              <p className="text-[10px] mt-4 text-slate-400 font-black tracking-widest uppercase">
-                Vérification Officielle
+              <p className="text-[9px] mt-4 text-slate-400 font-black tracking-[0.2em] uppercase text-center px-4">
+                Scannez pour vérifier l'authenticité
               </p>
             </div>
 
+            {/* Bouton de téléchargement final */}
             <Button 
               onClick={handleDownloadPDF} 
-              className="w-full py-8 text-xl gap-4 rounded-2xl shadow-xl font-black uppercase tracking-tighter"
+              disabled={downloading}
+              className="w-full py-8 text-lg gap-4 rounded-[1.5rem] shadow-xl font-black uppercase tracking-tighter bg-primary hover:scale-[1.02] transition-transform"
             >
-              <Download size={24} /> Télécharger mon PDF
+              {downloading ? (
+                <Loader2 className="animate-spin" size={24} />
+              ) : (
+                <><Download size={24} /> Télécharger le PDF</>
+              )}
             </Button>
           </div>
         </div>
