@@ -27,7 +27,7 @@ export default function CertificateDetails() {
 
   useEffect(() => {
     // ✅ Correction URL : on enlève 'api/' car ton axios le gère déjà
-    api.post("certificate/generate/", { course_id: courseId })
+    api.post("api/certificate/generate/", { course_id: courseId })
       .then((res) => {
         setCertData(res.data);
         setLoading(false);
